@@ -99,7 +99,7 @@ export default function RecipeImportPage() {
               className="rounded accent-green-500"
             />
             <span className="text-sm text-gray-400">
-              <span className="text-green-400">✨</span> Use AI directly
+              <span className="text-green-400">✨</span> Use AI parsing <span className="text-gray-600 text-xs">(uses Claude credits)</span>
             </span>
           </label>
         )}
