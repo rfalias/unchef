@@ -60,7 +60,7 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
         const b64 = await fileToBase64(imageFile);
         return parseAislesAI(storeId, {
           image_b64: b64,
-          image_media_type: imageFile.type || "image/jpeg",
+          image_media_type: "image/jpeg", // canvas always re-encodes to JPEG
         });
       }
     },
