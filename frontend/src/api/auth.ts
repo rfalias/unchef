@@ -14,11 +14,13 @@ interface User {
   is_superuser: boolean;
 }
 
+const LOCAL_SUFFIX = "@users.unchef";
+
 const toEmail = (username: string) =>
-  username.includes("@") ? username : `${username}@local`;
+  username.includes("@") ? username : `${username}${LOCAL_SUFFIX}`;
 
 export const usernameFromEmail = (email: string) =>
-  email.endsWith("@local") ? email.slice(0, -6) : email;
+  email.endsWith(LOCAL_SUFFIX) ? email.slice(0, -LOCAL_SUFFIX.length) : email;
 
 export const login = async (username: string, password: string): Promise<LoginResponse> => {
   const params = new URLSearchParams();
