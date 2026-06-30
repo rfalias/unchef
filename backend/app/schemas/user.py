@@ -37,3 +37,12 @@ class ApiKeySet(BaseModel):
 
 class ApiKeyStatus(BaseModel):
     has_claude_key: bool
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class PasswordReset(BaseModel):
+    new_password: str

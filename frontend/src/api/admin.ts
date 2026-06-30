@@ -24,6 +24,10 @@ export const deleteUser = async (id: number): Promise<void> => {
   await client.delete(`/admin/users/${id}`);
 };
 
+export const adminResetPassword = async (id: number, newPassword: string): Promise<void> => {
+  await client.post(`/admin/users/${id}/reset-password`, { new_password: newPassword });
+};
+
 export interface ParseInspectResult {
   url: string;
   fetch: {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { listUsers, patchUser, deleteUser, type AdminUser } from "../api/admin";
+import { listUsers, patchUser, deleteUser, adminResetPassword, type AdminUser } from "../api/admin";
 import { usernameFromEmail } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
@@ -18,9 +18,14 @@ function RoleBadge({ role }: { role: string }) {
   );
 }
 
-function UserCard({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
+function UserCard({ user, isSelf, isFounder }: { user: AdminUser; isSelf: boolean; isFounder: boolean }) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+
+  const canResetPassword = !isFounder || isSelf;
 
   const patchMut = useMutation({
     mutationFn: (body: { role?: string; is_active?: boolean }) => patchUser(user.id, body),
@@ -37,15 +42,37 @@ function UserCard({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
     },
   });
 
+  const resetMut = useMutation({
+    mutationFn: (pw: string) => adminResetPassword(user.id, pw),
+    onSuccess: () => {
+      toast.success(`Password reset for ${usernameFromEmail(user.email)}.`);
+      setResetting(false);
+      setNewPw("");
+      setConfirmPw("");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) =>
+      toast.error(e.response?.data?.detail ?? "Reset failed."),
+  });
+
+  const handleResetSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw !== confirmPw) { toast.error("Passwords don't match."); return; }
+    if (newPw.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    resetMut.mutate(newPw);
+  };
+
   const btnBase =
     "text-xs px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
+  const fieldCls =
+    "w-full border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      {/* Top row: email + badges */}
+      {/* Top row: username + badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <span className="text-sm font-medium text-gray-200 break-all min-w-0 flex-1">
           {usernameFromEmail(user.email)}
+          {isFounder && <span className="ml-2 text-xs text-yellow-600">★ founding account</span>}
         </span>
         <div className="flex items-center gap-2 shrink-0">
           <RoleBadge role={user.role} />
@@ -60,19 +87,27 @@ function UserCard({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => patchMut.mutate({ role: user.role === "admin" ? "user" : "admin" })}
-          disabled={isSelf || patchMut.isPending}
+          disabled={isSelf || isFounder || patchMut.isPending}
           className={`${btnBase} border-gray-700 text-gray-400 hover:border-green-700 hover:text-green-400`}
         >
           {user.role === "admin" ? "Make User" : "Make Admin"}
         </button>
         <button
           onClick={() => patchMut.mutate({ is_active: !user.is_active })}
-          disabled={isSelf || patchMut.isPending}
+          disabled={isSelf || isFounder || patchMut.isPending}
           className={`${btnBase} border-gray-700 text-gray-400 hover:border-yellow-700 hover:text-yellow-400`}
         >
           {user.is_active ? "Deactivate" : "Activate"}
         </button>
-        {!isSelf && (
+        {canResetPassword && !resetting && (
+          <button
+            onClick={() => setResetting(true)}
+            className={`${btnBase} border-gray-700 text-gray-400 hover:border-blue-700 hover:text-blue-400`}
+          >
+            Reset Password
+          </button>
+        )}
+        {!isSelf && !isFounder && (
           confirming ? (
             <>
               <button
@@ -98,6 +133,45 @@ function UserCard({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
           )
         )}
       </div>
+
+      {/* Inline password reset form */}
+      {resetting && (
+        <form onSubmit={handleResetSubmit} className="mt-4 pt-4 border-t border-gray-800 space-y-2">
+          <p className="text-xs text-gray-500 mb-2">Set new password for {usernameFromEmail(user.email)}</p>
+          <input
+            type="password"
+            required
+            value={newPw}
+            onChange={e => setNewPw(e.target.value)}
+            placeholder="New password (min 8 chars)"
+            className={fieldCls}
+          />
+          <input
+            type="password"
+            required
+            value={confirmPw}
+            onChange={e => setConfirmPw(e.target.value)}
+            placeholder="Confirm new password"
+            className={fieldCls}
+          />
+          <div className="flex gap-2 pt-1">
+            <button
+              type="submit"
+              disabled={resetMut.isPending || !newPw || !confirmPw}
+              className="text-xs px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white transition-colors"
+            >
+              {resetMut.isPending ? "Saving…" : "Set Password"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setResetting(false); setNewPw(""); setConfirmPw(""); }}
+              className="text-xs px-3 py-1.5 text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
@@ -123,7 +197,12 @@ export default function AdminUsersPage() {
       ) : (
         <div className="space-y-3">
           {users?.map((u) => (
-            <UserCard key={u.id} user={u} isSelf={u.id === me?.id} />
+            <UserCard
+              key={u.id}
+              user={u}
+              isSelf={u.id === me?.id}
+              isFounder={u.id === 1 && me?.id !== 1}
+            />
           ))}
           {users?.length === 0 && (
             <p className="text-center text-gray-600 py-8 text-sm">No users found.</p>

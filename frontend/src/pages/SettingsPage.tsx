@@ -1,22 +1,34 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { setApiKey, removeApiKey } from "../api/ai";
+import { changePassword } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import { useBranding } from "../contexts/BrandingContext";
+import { usernameFromEmail } from "../api/auth";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const { branding, saveBranding } = useBranding();
+
+  // API key
   const [key, setKey] = useState("");
   const [show, setShow] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
+
+  // Branding
   const [brandName, setBrandName] = useState("");
-  const [brandIcon, setBrandIcon] = useState("");   // emoji string or data URL
+  const [brandIcon, setBrandIcon] = useState("");
   const [iconMode, setIconMode] = useState<"emoji" | "image">("emoji");
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [iconError, setIconError] = useState<string | null>(null);
   const [brandingSaving, setBrandingSaving] = useState(false);
+
+  // Password
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +38,6 @@ export default function SettingsPage() {
       await setApiKey(key.trim());
       await refreshUser();
       setKey("");
-
       toast.success("Claude API key saved and verified.");
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
@@ -54,44 +65,23 @@ export default function SettingsPage() {
     setIconError(null);
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setIconError("File must be an image.");
-      return;
-    }
-    if (file.size > 64 * 1024) {
-      setIconError("Image must be under 64 KB.");
-      return;
-    }
-
+    if (!file.type.startsWith("image/")) { setIconError("File must be an image."); return; }
+    if (file.size > 64 * 1024) { setIconError("Image must be under 64 KB."); return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      // Validate pixel dimensions
       const img = new Image();
       img.onload = () => {
         const MAX = 256;
         let { width, height } = img;
-        if (width <= MAX && height <= MAX) {
-          setIconPreview(dataUrl);
-          setBrandIcon(dataUrl);
-          return;
-        }
-        // Scale down to fit within 256×256, maintaining aspect ratio
-        if (width > height) {
-          height = Math.round((height / width) * MAX);
-          width = MAX;
-        } else {
-          width = Math.round((width / height) * MAX);
-          height = MAX;
-        }
+        if (width <= MAX && height <= MAX) { setIconPreview(dataUrl); setBrandIcon(dataUrl); return; }
+        if (width > height) { height = Math.round((height / width) * MAX); width = MAX; }
+        else { width = Math.round((width / height) * MAX); height = MAX; }
         const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width; canvas.height = height;
         canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
         const scaled = canvas.toDataURL("image/png");
-        setIconPreview(scaled);
-        setBrandIcon(scaled);
+        setIconPreview(scaled); setBrandIcon(scaled);
       };
       img.onerror = () => setIconError("Could not read image.");
       img.src = dataUrl;
@@ -104,13 +94,8 @@ export default function SettingsPage() {
     if (iconError) return;
     setBrandingSaving(true);
     try {
-      await saveBranding({
-        app_name: brandName.trim() || undefined,
-        app_icon: brandIcon || undefined,
-      });
-      setBrandName("");
-      setBrandIcon("");
-      setIconPreview(null);
+      await saveBranding({ app_name: brandName.trim() || undefined, app_icon: brandIcon || undefined });
+      setBrandName(""); setBrandIcon(""); setIconPreview(null);
       toast.success("Branding updated.");
     } catch {
       toast.error("Failed to update branding.");
@@ -119,13 +104,71 @@ export default function SettingsPage() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw !== confirmPw) { toast.error("Passwords don't match."); return; }
+    if (newPw.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    setPwSaving(true);
+    try {
+      await changePassword(currentPw, newPw);
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      toast.success("Password changed.");
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      toast.error(detail ?? "Failed to change password.");
+    } finally {
+      setPwSaving(false);
+    }
+  };
+
   const inputCls =
     "flex-1 border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono";
+  const fieldCls =
+    "w-full border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
 
   return (
     <div className="p-4 sm:p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-100 mb-1">Settings</h1>
-      <p className="text-sm text-gray-500 mb-8">{user?.email}</p>
+      <p className="text-sm text-gray-500 mb-8">{user ? usernameFromEmail(user.email) : ""}</p>
+
+      {/* Change password */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+        <h2 className="font-semibold text-gray-100 mb-1">Change Password</h2>
+        <p className="text-xs text-gray-500 mb-4">Must be at least 8 characters.</p>
+        <form onSubmit={handleChangePassword} className="space-y-3">
+          <input
+            type="password"
+            required
+            value={currentPw}
+            onChange={e => setCurrentPw(e.target.value)}
+            placeholder="Current password"
+            className={fieldCls}
+          />
+          <input
+            type="password"
+            required
+            value={newPw}
+            onChange={e => setNewPw(e.target.value)}
+            placeholder="New password"
+            className={fieldCls}
+          />
+          <input
+            type="password"
+            required
+            value={confirmPw}
+            onChange={e => setConfirmPw(e.target.value)}
+            placeholder="Confirm new password"
+            className={fieldCls}
+          />
+          <button
+            type="submit"
+            disabled={pwSaving || !currentPw || !newPw || !confirmPw}
+            className="bg-green-600 hover:bg-green-500 disabled:bg-green-900 disabled:text-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            {pwSaving ? "Saving…" : "Change Password"}
+          </button>
+        </form>
+      </div>
 
       {/* Branding — admin only */}
       {user?.role === "admin" && (
@@ -133,7 +176,6 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-gray-100 mb-1">App Branding</h2>
           <p className="text-xs text-gray-500 mb-4">Customise the name and icon shown in the sidebar.</p>
           <form onSubmit={handleBrandingSave} className="space-y-4">
-            {/* App name */}
             <div>
               <label className="block text-xs text-gray-500 mb-1">App Name</label>
               <input
@@ -144,10 +186,8 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Icon */}
             <div>
               <label className="block text-xs text-gray-500 mb-2">Icon</label>
-              {/* mode toggle */}
               <div className="flex gap-1 mb-3 p-1 bg-gray-800 border border-gray-700 rounded-lg w-fit">
                 {(["emoji", "image"] as const).map(m => (
                   <button

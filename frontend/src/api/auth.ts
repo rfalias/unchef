@@ -47,6 +47,15 @@ export const getMe = async (token: string): Promise<User> => {
   return data;
 };
 
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const token = localStorage.getItem("token");
+  await axios.post(
+    "/api/v1/users/me/change-password",
+    { current_password: currentPassword, new_password: newPassword },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
 export const logout = async (): Promise<void> => {
   const token = localStorage.getItem("token");
   if (token) {

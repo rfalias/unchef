@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 from app.auth import current_admin_user, current_active_user
 from app.models.user import User
-from app.schemas.user import AdminUserPatch, AdminUserRead
+from app.schemas.user import AdminUserPatch, AdminUserRead, PasswordReset
 
 _BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
@@ -58,6 +58,25 @@ async def patch_user(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+@router.post("/users/{user_id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def admin_reset_password(
+    user_id: int,
+    body: PasswordReset,
+    current_user: User = Depends(current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if user_id == 1 and current_user.id != 1:
+        raise HTTPException(status_code=403, detail="Cannot reset the founding account's password.")
+    user = await db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    from fastapi_users.password import PasswordHelper
+    user.hashed_password = PasswordHelper().hash(body.new_password)
+    await db.commit()
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
