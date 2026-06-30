@@ -2,10 +2,10 @@ import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import Modal from "../ui/Modal";
-import { parseAislesAI, createAisle, type AisleSuggestion } from "../../api/stores";
+import { parseAislesAI, importWalmartAisles, createAisle, type AisleSuggestion } from "../../api/stores";
 import KeywordEditor from "./KeywordEditor";
 
-type Tab = "text" | "image";
+type Tab = "text" | "image" | "walmart";
 
 interface Props {
   storeId: number;
@@ -46,6 +46,7 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
   const [tab, setTab] = useState<Tab>("text");
   const [text, setText] = useState("");
   const [hint, setHint] = useState("");
+  const [walmartStoreId, setWalmartStoreId] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [parseProgress, setParseProgress] = useState<string | null>(null);
@@ -55,7 +56,11 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
   const parseMut = useMutation({
     mutationFn: async () => {
       const h = hint.trim() || undefined;
-      if (tab === "text") {
+      if (tab === "walmart") {
+        const id = parseInt(walmartStoreId.trim(), 10);
+        if (!id) throw new Error("Enter a valid Walmart store number.");
+        return importWalmartAisles(storeId, id);
+      } else if (tab === "text") {
         if (!text.trim()) throw new Error("Enter some aisle information.");
         return parseAislesAI(storeId, { text: text.trim(), hint: h });
       } else {
@@ -133,18 +138,42 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
         : "text-gray-500 hover:text-gray-300"
     }`;
 
-  const canParse = tab === "text" ? text.trim().length > 0 : imageFiles.length > 0;
+  const canParse =
+    tab === "walmart" ? walmartStoreId.trim().length > 0
+    : tab === "text" ? text.trim().length > 0
+    : imageFiles.length > 0;
 
   return (
     <Modal title="Import Aisles with AI" onClose={onClose}>
       {suggestions === null ? (
         <div className="space-y-4">
           <div className="flex gap-1 border-b border-gray-700">
+            <button className={tabCls("walmart")} onClick={() => setTab("walmart")}>Walmart</button>
             <button className={tabCls("text")} onClick={() => setTab("text")}>Paste Text</button>
             <button className={tabCls("image")} onClick={() => setTab("image")}>Upload Images</button>
           </div>
 
-          {tab === "text" ? (
+          {tab === "walmart" ? (
+            <div className="space-y-3">
+              <p className="text-xs text-gray-500">
+                Enter your Walmart store number to automatically import grocery and food-related departments as aisles.
+                Find your store number at the bottom of a receipt or on the store's page on walmart.com.
+              </p>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Walmart Store Number</label>
+                <input
+                  type="number"
+                  value={walmartStoreId}
+                  onChange={e => setWalmartStoreId(e.target.value)}
+                  placeholder="e.g. 2265"
+                  className="w-full border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <p className="text-xs text-gray-600">
+                Aisles are imported with empty keywords — use the ✨ button on each aisle after creation to generate keyword suggestions.
+              </p>
+            </div>
+          ) : tab === "text" ? (
             <div>
               <p className="text-xs text-gray-500 mb-2">
                 Paste aisle names, a store directory, signage text, or anything describing your store's layout.
@@ -204,18 +233,20 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
             </div>
           )}
 
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">
-              Additional context <span className="text-gray-700">(optional)</span>
-            </label>
-            <textarea
-              value={hint}
-              onChange={e => setHint(e.target.value)}
-              rows={2}
-              placeholder={`e.g. "Each sign shows aisle number and category. Ignore the sale banners."`}
-              className="w-full border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-            />
-          </div>
+          {tab !== "walmart" && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Additional context <span className="text-gray-700">(optional)</span>
+              </label>
+              <textarea
+                value={hint}
+                onChange={e => setHint(e.target.value)}
+                rows={2}
+                placeholder={`e.g. "Each sign shows aisle number and category. Ignore the sale banners."`}
+                className="w-full border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              />
+            </div>
+          )}
 
           <button
             onClick={() => parseMut.mutate()}
@@ -223,10 +254,12 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
             className="w-full bg-green-700 hover:bg-green-600 disabled:bg-green-900 disabled:text-green-700 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
           >
             {parseMut.isPending
-              ? (parseProgress ?? "Parsing with AI…")
-              : imageFiles.length > 1
-                ? `Parse ${imageFiles.length} Images`
-                : "Parse Aisles"}
+              ? (parseProgress ?? (tab === "walmart" ? "Fetching from Walmart…" : "Parsing with AI…"))
+              : tab === "walmart"
+                ? "Fetch Aisles"
+                : imageFiles.length > 1
+                  ? `Parse ${imageFiles.length} Images`
+                  : "Parse Aisles"}
           </button>
         </div>
       ) : (

@@ -59,6 +59,16 @@ export interface AisleSuggestion {
   keywords: string[];
 }
 
+export const importWalmartAisles = async (
+  storeId: number,
+  walmartStoreId: number
+): Promise<AisleSuggestion[]> => {
+  const { data } = await client.post(`/stores/${storeId}/aisles/import-walmart`, {
+    walmart_store_id: walmartStoreId,
+  });
+  return data;
+};
+
 export const parseAislesAI = async (
   storeId: number,
   body: { text?: string; image_b64?: string; image_media_type?: string; hint?: string }

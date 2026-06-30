@@ -28,6 +28,10 @@ class AisleImportRequest(BaseModel):
     hint: str | None = None
 
 
+class WalmartImportRequest(BaseModel):
+    walmart_store_id: int
+
+
 class AisleSuggestion(BaseModel):
     name: str
     keywords: list[str]
@@ -179,6 +183,24 @@ async def update_aisle(
     await db.commit()
     await db.refresh(aisle)
     return aisle
+
+
+@router.post("/{store_id}/aisles/import-walmart", response_model=list[AisleSuggestion])
+async def import_walmart_aisles(
+    store_id: int,
+    body: WalmartImportRequest,
+    _: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Store).where(Store.id == store_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Store not found.")
+    from app.services.walmart import fetch_walmart_aisles
+    try:
+        aisles = await fetch_walmart_aisles(body.walmart_store_id)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Walmart fetch failed: {exc}")
+    return [AisleSuggestion(name=a["name"], keywords=[]) for a in aisles]
 
 
 @router.post("/{store_id}/aisles/parse-ai", response_model=list[AisleSuggestion])
