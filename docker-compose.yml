@@ -1,14 +1,13 @@
 services:
   backend:
-    image: ghcr.io/rfalias/unchef/backend:${IMAGE_TAG:-latest}
+    image: ghcr.io/rfalias/unchef/backend:latest
     volumes:
       - db_data:/data
     environment:
       DATABASE_URL: sqlite+aiosqlite:////data/food_app.db
-      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your environment}
-      JWT_LIFETIME_SECONDS: ${JWT_LIFETIME_SECONDS:-2592000}
-      # Comma-separated list of allowed origins, e.g. https://chef.example.com
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      JWT_SECRET: changeme
+      JWT_LIFETIME_SECONDS: 2592000
+      CORS_ORIGINS: http://localhost,http://192.168.1.100,https://chef.example.com
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
@@ -18,9 +17,9 @@ services:
       start_period: 10s
 
   frontend:
-    image: ghcr.io/rfalias/unchef/frontend:${IMAGE_TAG:-latest}
+    image: ghcr.io/rfalias/unchef/frontend:latest
     ports:
-      - "${PORT:-80}:80"
+      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
