@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 export default function LoginPage() {
   const { setToken } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,11 +15,11 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { access_token } = await login(email, password);
+      const { access_token } = await login(username, password);
       setToken(access_token);
       navigate("/recipes");
     } catch {
-      toast.error("Invalid email or password.");
+      toast.error("Invalid username or password.");
     } finally {
       setLoading(false);
     }
@@ -33,20 +33,20 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <span className="text-4xl">🥗</span>
-          <h1 className="text-2xl font-bold text-gray-100 mt-2">Food App</h1>
+          <h1 className="text-2xl font-bold text-gray-100 mt-2">Uninspired Chef</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
         </div>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-400 mb-1">Username</label>
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="username"
                 className={inputCls}
               />
             </div>

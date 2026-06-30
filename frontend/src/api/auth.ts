@@ -14,10 +14,15 @@ interface User {
   is_superuser: boolean;
 }
 
-// Login uses form encoding (OAuth2 standard)
-export const login = async (email: string, password: string): Promise<LoginResponse> => {
+const toEmail = (username: string) =>
+  username.includes("@") ? username : `${username}@local`;
+
+export const usernameFromEmail = (email: string) =>
+  email.endsWith("@local") ? email.slice(0, -6) : email;
+
+export const login = async (username: string, password: string): Promise<LoginResponse> => {
   const params = new URLSearchParams();
-  params.append("username", email);
+  params.append("username", toEmail(username));
   params.append("password", password);
   const { data } = await axios.post("/api/v1/auth/jwt/login", params, {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -25,8 +30,11 @@ export const login = async (email: string, password: string): Promise<LoginRespo
   return data;
 };
 
-export const register = async (email: string, password: string): Promise<User> => {
-  const { data } = await axios.post("/api/v1/auth/register", { email, password });
+export const register = async (username: string, password: string): Promise<User> => {
+  const { data } = await axios.post("/api/v1/auth/register", {
+    email: toEmail(username),
+    password,
+  });
   return data;
 };
 

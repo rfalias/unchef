@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { listUsers, patchUser, deleteUser, type AdminUser } from "../api/admin";
+import { usernameFromEmail } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 
@@ -44,7 +45,7 @@ function UserCard({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
       {/* Top row: email + badges */}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <span className="text-sm font-medium text-gray-200 break-all min-w-0 flex-1">
-          {user.email}
+          {usernameFromEmail(user.email)}
         </span>
         <div className="flex items-center gap-2 shrink-0">
           <RoleBadge role={user.role} />
