@@ -25,9 +25,21 @@ def _minutes(value: Any) -> int | None:
 def _scrape_sync(url: str, html: str) -> dict:
     scraper = scrape_html(html, org_url=url)
     try:
-        ingredients_raw = scraper.ingredients() or []
+        groups = scraper.ingredient_groups() or []
+        # Use groups if any have a non-None purpose (i.e. real sections exist)
+        if groups and any(g.purpose for g in groups):
+            ingredients_raw = []
+            for g in groups:
+                section = g.purpose.strip() if g.purpose else None
+                for raw in (g.ingredients or []):
+                    ingredients_raw.append((raw, section))
+        else:
+            ingredients_raw = [(i, None) for i in (scraper.ingredients() or [])]
     except Exception:
-        ingredients_raw = []
+        try:
+            ingredients_raw = [(i, None) for i in (scraper.ingredients() or [])]
+        except Exception:
+            ingredients_raw = []
     try:
         instructions_raw = scraper.instructions_list() or []
     except Exception:
@@ -68,7 +80,13 @@ def _scrape_sync(url: str, html: str) -> dict:
     except Exception:
         tags = []
 
-    ingredients = [parse_ingredient(i) for i in ingredients_raw]
+    ingredients = []
+    for raw_text, section in ingredients_raw:
+        cleaned = raw_text.lstrip("▢☐□✓✔ ").strip()
+        item = parse_ingredient(cleaned)
+        if section:
+            item["section"] = section
+        ingredients.append(item)
 
     return {
         "title": title,

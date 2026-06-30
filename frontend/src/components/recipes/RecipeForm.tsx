@@ -11,7 +11,7 @@ interface Props {
   submitLabel?: string;
 }
 
-const emptyIngredient = (): IngredientItem => ({ name: "", amount: null, unit: null, notes: null });
+const emptyIngredient = (): IngredientItem => ({ name: "", amount: null, unit: null, notes: null, section: null });
 
 const input = "w-full border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
 const label = "block text-sm font-medium text-gray-300 mb-1";
@@ -37,7 +37,7 @@ export default function RecipeForm({ initial, onSubmit, isPending, submitLabel =
   const [pasteText, setPasteText] = useState("");
   const [aiParsing, setAiParsing] = useState(false);
 
-  const updateIngredient = (i: number, field: keyof IngredientItem, value: string) => {
+  const updateIngredient = (i: number, field: keyof IngredientItem, value: string | null) => {
     setIngredients(prev => prev.map((ing, idx) => idx === i ? { ...ing, [field]: value || null } : ing));
   };
   const addIngredient = () => setIngredients(prev => [...prev, emptyIngredient()]);
@@ -158,19 +158,32 @@ export default function RecipeForm({ initial, onSubmit, isPending, submitLabel =
           </div>
         )}
         <div className="space-y-2">
-          {ingredients.map((ing, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <input value={ing.amount ?? ""} onChange={e => updateIngredient(i, "amount", e.target.value)}
-                className={"w-20 " + smallInput} placeholder="Amt" />
-              <input value={ing.unit ?? ""} onChange={e => updateIngredient(i, "unit", e.target.value)}
-                className={"w-20 " + smallInput} placeholder="Unit" />
-              <input value={ing.name} onChange={e => updateIngredient(i, "name", e.target.value)}
-                className={"flex-1 " + smallInput} placeholder="Ingredient name" />
-              <input value={ing.notes ?? ""} onChange={e => updateIngredient(i, "notes", e.target.value)}
-                className={"w-28 " + smallInput} placeholder="Notes" />
-              <button type="button" onClick={() => removeIngredient(i)} className="text-gray-600 hover:text-red-400 text-lg leading-none">&times;</button>
-            </div>
-          ))}
+          {ingredients.map((ing, i) => {
+            const prevSection = i > 0 ? ingredients[i - 1].section : undefined;
+            const showHeader = ing.section && ing.section !== prevSection;
+            return (
+              <div key={i}>
+                {showHeader && (
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 pt-2 pb-0.5">
+                    {ing.section}
+                  </p>
+                )}
+                <div className="flex gap-2 items-center">
+                  <input value={ing.amount ?? ""} onChange={e => updateIngredient(i, "amount", e.target.value)}
+                    className={"w-16 " + smallInput} placeholder="Amt" />
+                  <input value={ing.unit ?? ""} onChange={e => updateIngredient(i, "unit", e.target.value)}
+                    className={"w-16 " + smallInput} placeholder="Unit" />
+                  <input value={ing.name} onChange={e => updateIngredient(i, "name", e.target.value)}
+                    className={"flex-1 " + smallInput} placeholder="Ingredient name" />
+                  <input value={ing.notes ?? ""} onChange={e => updateIngredient(i, "notes", e.target.value)}
+                    className={"w-24 " + smallInput} placeholder="Notes" />
+                  <input value={ing.section ?? ""} onChange={e => updateIngredient(i, "section", e.target.value || null)}
+                    className={"w-24 " + smallInput} placeholder="Section" title="Section header (e.g. 'For the sauce')" />
+                  <button type="button" onClick={() => removeIngredient(i)} className="text-gray-600 hover:text-red-400 text-lg leading-none">&times;</button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -82,15 +82,28 @@ export default function RecipeDetailPage() {
         <div>
           <h2 className="text-lg font-semibold text-gray-200 mb-3">Ingredients</h2>
           <ul className="space-y-1">
-            {recipe.ingredients.map((ing, i) => (
-              <li key={i} className="flex gap-2 text-sm text-gray-300 py-1.5 border-b border-gray-800 last:border-0">
-                <span className="text-gray-600 shrink-0">
-                  {[ing.amount, ing.unit].filter(Boolean).join(" ")}
-                </span>
-                <span className="font-medium">{ing.name}</span>
-                {ing.notes && <span className="text-gray-600 italic">({ing.notes})</span>}
-              </li>
-            ))}
+            {recipe.ingredients.map((ing, i) => {
+              const prevSection = i > 0 ? recipe.ingredients[i - 1].section : undefined;
+              const showHeader = ing.section && ing.section !== prevSection;
+              return (
+                <>
+                  {showHeader && (
+                    <li key={`sec-${i}`} className="pt-3 pb-0.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        {ing.section}
+                      </span>
+                    </li>
+                  )}
+                  <li key={i} className="flex gap-2 text-sm text-gray-300 py-1.5 border-b border-gray-800 last:border-0">
+                    <span className="text-gray-600 shrink-0">
+                      {[ing.amount, ing.unit].filter(Boolean).join(" ")}
+                    </span>
+                    <span className="font-medium">{ing.name}</span>
+                    {ing.notes && <span className="text-gray-600 italic">({ing.notes})</span>}
+                  </li>
+                </>
+              );
+            })}
           </ul>
         </div>
 

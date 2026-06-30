@@ -8,6 +8,7 @@ class IngredientItem(BaseModel):
     amount: str | None = None
     unit: str | None = None
     notes: str | None = None
+    section: str | None = None
 
 
 class RecipeBase(BaseModel):

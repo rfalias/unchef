@@ -3,6 +3,7 @@ export interface IngredientItem {
   amount: string | null;
   unit: string | null;
   notes: string | null;
+  section: string | null;
 }
 
 export interface Recipe {
