@@ -53,3 +53,16 @@ export const reorderAisles = async (
   const { data } = await client.put(`/stores/${storeId}/aisles/reorder`, items);
   return data;
 };
+
+export interface AisleSuggestion {
+  name: string;
+  keywords: string[];
+}
+
+export const parseAislesAI = async (
+  storeId: number,
+  body: { text?: string; image_b64?: string; image_media_type?: string }
+): Promise<AisleSuggestion[]> => {
+  const { data } = await client.post(`/stores/${storeId}/aisles/parse-ai`, body);
+  return data;
+};

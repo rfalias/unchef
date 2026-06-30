@@ -267,6 +267,51 @@ Rules:
     return json.loads(_extract_json(raw))
 
 
+async def parse_aisles_from_input(
+    api_key: str,
+    text: str | None = None,
+    image_b64: str | None = None,
+    image_media_type: str | None = None,
+) -> list[dict]:
+    """Return [{name: str, keywords: [str]}] from free-form text or an image of aisle signs."""
+    instruction = (
+        "You are helping set up a grocery shopping app. "
+        "Parse the aisle information provided and return a JSON array of aisles. "
+        "For each aisle include a short name and 10–25 lowercase keyword strings "
+        "(product names, categories) that would belong in that aisle. "
+        "Return ONLY a JSON array like: "
+        '[{"name": "Produce", "keywords": ["apple", "banana", "spinach", "broccoli"]}, ...]'
+        " — no markdown, no explanation."
+    )
+
+    content: list[dict] = []
+    if image_b64:
+        content.append({
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": image_media_type or "image/jpeg",
+                "data": image_b64,
+            },
+        })
+        content.append({"type": "text", "text": instruction})
+    else:
+        content.append({"type": "text", "text": f"{instruction}\n\nAisle information:\n{text}"})
+
+    def _call() -> str:
+        client = anthropic.Anthropic(api_key=api_key)
+        msg = client.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            messages=[{"role": "user", "content": content}],
+        )
+        return msg.content[0].text
+
+    loop = asyncio.get_running_loop()
+    raw = await loop.run_in_executor(None, _call)
+    return json.loads(_extract_json(raw))
+
+
 async def suggest_aisle_keywords(aisle_name: str, api_key: str, store_name: str = "") -> list[str]:
     context = f" at {store_name}" if store_name else ""
     prompt = f"""Suggest grocery keywords for the "{aisle_name}" aisle{context} in a shopping list app.

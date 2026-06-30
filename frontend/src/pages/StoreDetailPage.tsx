@@ -20,6 +20,7 @@ import { useStore, useUpdateStore, useCreateAisle, useUpdateAisle, useDeleteAisl
 import { aiSuggestKeywords } from "../api/ai";
 import { useAuth } from "../auth/AuthContext";
 import KeywordEditor from "../components/stores/KeywordEditor";
+import ImportAislesModal from "../components/stores/ImportAislesModal";
 import Spinner from "../components/ui/Spinner";
 import type { Aisle } from "../types";
 
@@ -140,6 +141,7 @@ function SortableAisleRow({ aisle, storeId, storeName, onDelete }: { aisle: Aisl
 }
 
 export default function StoreDetailPage() {
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const storeId = Number(id);
   const { data: store, isLoading } = useStore(storeId);
@@ -152,6 +154,7 @@ export default function StoreDetailPage() {
   const [editingStore, setEditingStore] = useState(false);
   const [draftStoreName, setDraftStoreName] = useState("");
   const [draftStoreDesc, setDraftStoreDesc] = useState("");
+  const [showImport, setShowImport] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -232,7 +235,18 @@ export default function StoreDetailPage() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-gray-200">Aisles</h2>
-        <p className="text-xs text-gray-600">Drag to reorder</p>
+        <div className="flex items-center gap-3">
+          {user?.has_claude_key && (
+            <button
+              onClick={() => setShowImport(true)}
+              className="text-xs text-green-500 hover:text-green-400 px-2 py-1 rounded hover:bg-gray-700 transition-colors"
+              title="Import aisles using AI (image or text)"
+            >
+              ✨ Import with AI
+            </button>
+          )}
+          <p className="text-xs text-gray-600">Drag to reorder</p>
+        </div>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -259,6 +273,10 @@ export default function StoreDetailPage() {
           Add Aisle
         </button>
       </form>
+
+      {showImport && (
+        <ImportAislesModal storeId={storeId} onClose={() => setShowImport(false)} />
+      )}
     </div>
   );
 }

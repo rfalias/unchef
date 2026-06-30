@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
-from app.auth import current_admin_user
+from app.auth import current_active_user, current_admin_user
 from app.models.aisle import Aisle
 from app.models.store import Store
 from app.models.user import User
@@ -18,6 +19,17 @@ from app.schemas.store import (
     StoreRead,
     StoreUpdate,
 )
+
+
+class AisleImportRequest(BaseModel):
+    text: str | None = None
+    image_b64: str | None = None
+    image_media_type: str | None = None
+
+
+class AisleSuggestion(BaseModel):
+    name: str
+    keywords: list[str]
 
 router = APIRouter(prefix="/stores", tags=["stores"])
 
@@ -166,6 +178,30 @@ async def update_aisle(
     await db.commit()
     await db.refresh(aisle)
     return aisle
+
+
+@router.post("/{store_id}/aisles/parse-ai", response_model=list[AisleSuggestion])
+async def parse_aisles_ai(
+    store_id: int,
+    body: AisleImportRequest,
+    current_user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.claude_api_key:
+        raise HTTPException(status_code=400, detail="No Claude API key configured on your account.")
+    if not body.text and not body.image_b64:
+        raise HTTPException(status_code=400, detail="Provide either text or an image.")
+    result = await db.execute(select(Store).where(Store.id == store_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Store not found.")
+    from app.services.ai_service import parse_aisles_from_input
+    aisles = await parse_aisles_from_input(
+        api_key=current_user.claude_api_key,
+        text=body.text,
+        image_b64=body.image_b64,
+        image_media_type=body.image_media_type,
+    )
+    return [AisleSuggestion(name=a.get("name", ""), keywords=a.get("keywords", [])) for a in aisles]
 
 
 @router.delete("/{store_id}/aisles/{aisle_id}", status_code=204)
