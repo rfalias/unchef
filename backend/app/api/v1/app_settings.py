@@ -9,12 +9,22 @@ from app.models.user import User
 
 router = APIRouter(prefix="/app-settings", tags=["app-settings"])
 
-DEFAULTS = {"app_name": "Uninspired Chef", "app_icon": "🥗"}
+DEFAULTS = {
+    "app_name": "Uninspired Chef",
+    "app_icon": "🥗",
+    "theme_palette": "charcoal",
+    "theme_accent": "green",
+}
+
+VALID_PALETTES = {"charcoal", "midnight", "mocha"}
+VALID_ACCENTS = {"green", "blue", "purple", "amber", "rose", "cyan"}
 
 
 class BrandingUpdate(BaseModel):
     app_name: str | None = None
     app_icon: str | None = None
+    theme_palette: str | None = None
+    theme_accent: str | None = None
 
 
 @router.get("")
@@ -33,6 +43,10 @@ async def update_settings(
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if "app_icon" in updates and len(updates["app_icon"]) > 100_000:
         raise HTTPException(status_code=422, detail="Icon image too large (max ~64 KB).")
+    if "theme_palette" in updates and updates["theme_palette"] not in VALID_PALETTES:
+        raise HTTPException(status_code=422, detail=f"Invalid palette. Choose from: {', '.join(VALID_PALETTES)}")
+    if "theme_accent" in updates and updates["theme_accent"] not in VALID_ACCENTS:
+        raise HTTPException(status_code=422, detail=f"Invalid accent. Choose from: {', '.join(VALID_ACCENTS)}")
     for key, value in updates.items():
         await db.execute(
             text("INSERT INTO app_settings (key, value) VALUES (:k, :v) ON CONFLICT(key) DO UPDATE SET value = :v"),

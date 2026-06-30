@@ -3,6 +3,8 @@ import client from "./client";
 export interface AppBranding {
   app_name: string;
   app_icon: string;
+  theme_palette: string;
+  theme_accent: string;
 }
 
 export const getBranding = async (): Promise<AppBranding> => {

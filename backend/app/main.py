@@ -29,7 +29,12 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
         ))
-        for k, v in [("app_name", "Uninspired Chef"), ("app_icon", "🥗")]:
+        for k, v in [
+            ("app_name", "Uninspired Chef"),
+            ("app_icon", "🥗"),
+            ("theme_palette", "charcoal"),
+            ("theme_accent", "green"),
+        ]:
             await conn.execute(
                 text("INSERT OR IGNORE INTO app_settings (key, value) VALUES (:k, :v)"),
                 {"k": k, "v": v},

@@ -1,5 +1,35 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+
+const PALETTES = [
+  {
+    id: "charcoal",
+    label: "Charcoal",
+    description: "Cool dark gray",
+    swatches: ["#0f1117", "#111827", "#1f2937", "#374151"],
+  },
+  {
+    id: "midnight",
+    label: "Midnight",
+    description: "Blue-tinted slate",
+    swatches: ["#020617", "#0f172a", "#1e293b", "#334155"],
+  },
+  {
+    id: "mocha",
+    label: "Mocha",
+    description: "Warm brown tones",
+    swatches: ["#1a1310", "#231b15", "#2e2218", "#42301e"],
+  },
+];
+
+const ACCENTS = [
+  { id: "green",  label: "Green",  color: "#10b981" },
+  { id: "blue",   label: "Blue",   color: "#3b82f6" },
+  { id: "purple", label: "Purple", color: "#a855f7" },
+  { id: "amber",  label: "Amber",  color: "#f59e0b" },
+  { id: "rose",   label: "Rose",   color: "#f43f5e" },
+  { id: "cyan",   label: "Cyan",   color: "#06b6d4" },
+];
 import { setApiKey, removeApiKey } from "../api/ai";
 import { changePassword } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
@@ -23,6 +53,9 @@ export default function SettingsPage() {
   const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [iconError, setIconError] = useState<string | null>(null);
   const [brandingSaving, setBrandingSaving] = useState(false);
+
+  // Theme
+  const [themeSaving, setThemeSaving] = useState(false);
 
   // Password
   const [currentPw, setCurrentPw] = useState("");
@@ -121,6 +154,17 @@ export default function SettingsPage() {
     }
   };
 
+  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string }) => {
+    setThemeSaving(true);
+    try {
+      await saveBranding(patch);
+    } catch {
+      toast.error("Failed to save theme.");
+    } finally {
+      setThemeSaving(false);
+    }
+  };
+
   const inputCls =
     "flex-1 border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono";
   const fieldCls =
@@ -169,6 +213,68 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
+
+      {/* Theme — admin only */}
+      {user?.role === "admin" && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-100 mb-1">Theme</h2>
+          <p className="text-xs text-gray-500 mb-5">Applies to all users.</p>
+
+          {/* Palette */}
+          <div className="mb-5">
+            <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">Base Palette</p>
+            <div className="grid grid-cols-3 gap-3">
+              {PALETTES.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={themeSaving}
+                  onClick={() => handleThemeSave({ theme_palette: p.id })}
+                  className={`rounded-xl border-2 p-3 text-left transition-all ${
+                    branding.theme_palette === p.id
+                      ? "border-green-500 ring-1 ring-green-500/30"
+                      : "border-gray-700 hover:border-gray-500"
+                  }`}
+                >
+                  {/* Swatch strip using absolute palette colors */}
+                  <div className="flex gap-1 mb-2 rounded overflow-hidden h-8">
+                    {p.swatches.map((c, i) => (
+                      <div key={i} className="flex-1" style={{ background: c }} />
+                    ))}
+                  </div>
+                  <p className="text-xs font-medium text-gray-200">{p.label}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{p.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Accent */}
+          <div>
+            <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">Accent Color</p>
+            <div className="flex flex-wrap gap-2">
+              {ACCENTS.map(a => (
+                <button
+                  key={a.id}
+                  type="button"
+                  disabled={themeSaving}
+                  onClick={() => handleThemeSave({ theme_accent: a.id })}
+                  title={a.label}
+                  className={`w-9 h-9 rounded-full border-2 transition-all ${
+                    branding.theme_accent === a.id
+                      ? "border-white scale-110 ring-2 ring-white/20"
+                      : "border-transparent hover:scale-105"
+                  }`}
+                  style={{ background: a.color }}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 mt-2">
+              Current: <span className="text-gray-400 capitalize">{branding.theme_accent}</span>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Branding — admin only */}
       {user?.role === "admin" && (

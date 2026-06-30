@@ -4,9 +4,114 @@
   box-sizing: border-box;
 }
 
+/* ── Default palette baseline ── */
+:root {
+  --color-gray-950: #0f1117;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #0f1117;
-  color: #f3f4f6;
+  background: var(--color-gray-950);
+  color: var(--color-gray-100);
+}
+
+/* ── Palette: Midnight (slate / blue-tinted) ── */
+[data-palette="midnight"] {
+  --color-gray-950: #020617;
+  --color-gray-900: #0f172a;
+  --color-gray-800: #1e293b;
+  --color-gray-700: #334155;
+  --color-gray-600: #475569;
+  --color-gray-500: #64748b;
+  --color-gray-400: #94a3b8;
+  --color-gray-300: #cbd5e1;
+  --color-gray-200: #e2e8f0;
+  --color-gray-100: #f1f5f9;
+  --color-gray-50:  #f8fafc;
+}
+
+/* ── Palette: Mocha (warm / brown-tinted) ── */
+[data-palette="mocha"] {
+  --color-gray-950: #1a1310;
+  --color-gray-900: #231b15;
+  --color-gray-800: #2e2218;
+  --color-gray-700: #42301e;
+  --color-gray-600: #6b4e35;
+  --color-gray-500: #9e7255;
+  --color-gray-400: #c4a07f;
+  --color-gray-300: #ddc4aa;
+  --color-gray-200: #eee0d1;
+  --color-gray-100: #f7efe7;
+  --color-gray-50:  #fdf6ef;
+}
+
+/* ── Accent: Blue ── */
+[data-accent="blue"] {
+  --color-green-950: #172554;
+  --color-green-900: #172554;
+  --color-green-800: #1e3a8a;
+  --color-green-700: #1d4ed8;
+  --color-green-600: #2563eb;
+  --color-green-500: #3b82f6;
+  --color-green-400: #60a5fa;
+  --color-green-300: #93c5fd;
+  --color-green-200: #bfdbfe;
+  --color-green-100: #dbeafe;
+}
+
+/* ── Accent: Purple ── */
+[data-accent="purple"] {
+  --color-green-950: #3b0764;
+  --color-green-900: #3b0764;
+  --color-green-800: #581c87;
+  --color-green-700: #7e22ce;
+  --color-green-600: #9333ea;
+  --color-green-500: #a855f7;
+  --color-green-400: #c084fc;
+  --color-green-300: #d8b4fe;
+  --color-green-200: #ede9fe;
+  --color-green-100: #f3e8ff;
+}
+
+/* ── Accent: Amber ── */
+[data-accent="amber"] {
+  --color-green-950: #451a03;
+  --color-green-900: #451a03;
+  --color-green-800: #78350f;
+  --color-green-700: #b45309;
+  --color-green-600: #d97706;
+  --color-green-500: #f59e0b;
+  --color-green-400: #fbbf24;
+  --color-green-300: #fcd34d;
+  --color-green-200: #fde68a;
+  --color-green-100: #fef3c7;
+}
+
+/* ── Accent: Rose ── */
+[data-accent="rose"] {
+  --color-green-950: #4c0519;
+  --color-green-900: #4c0519;
+  --color-green-800: #881337;
+  --color-green-700: #be123c;
+  --color-green-600: #e11d48;
+  --color-green-500: #f43f5e;
+  --color-green-400: #fb7185;
+  --color-green-300: #fda4af;
+  --color-green-200: #fecdd3;
+  --color-green-100: #ffe4e6;
+}
+
+/* ── Accent: Cyan ── */
+[data-accent="cyan"] {
+  --color-green-950: #083344;
+  --color-green-900: #083344;
+  --color-green-800: #164e63;
+  --color-green-700: #0e7490;
+  --color-green-600: #0891b2;
+  --color-green-500: #06b6d4;
+  --color-green-400: #22d3ee;
+  --color-green-300: #67e8f9;
+  --color-green-200: #a5f3fc;
+  --color-green-100: #cffafe;
 }

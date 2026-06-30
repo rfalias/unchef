@@ -7,11 +7,17 @@ interface BrandingContextValue {
   saveBranding: (b: Partial<AppBranding>) => Promise<void>;
 }
 
-const DEFAULTS: AppBranding = { app_name: "Uninspired Chef", app_icon: "🥗" };
+const DEFAULTS: AppBranding = {
+  app_name: "Uninspired Chef",
+  app_icon: "🥗",
+  theme_palette: "charcoal",
+  theme_accent: "green",
+};
 
-function applyBranding({ app_name, app_icon }: AppBranding) {
+function applyBranding({ app_name, app_icon, theme_palette, theme_accent }: AppBranding) {
   document.title = app_name;
 
+  // Favicon
   const link =
     document.querySelector<HTMLLinkElement>("link[rel='icon']") ??
     (() => {
@@ -25,7 +31,6 @@ function applyBranding({ app_name, app_icon }: AppBranding) {
     link.type = app_icon.startsWith("data:image/png") ? "image/png" : "image/jpeg";
     link.href = app_icon;
   } else {
-    // Render emoji onto a canvas and use as favicon
     const canvas = document.createElement("canvas");
     canvas.width = 64;
     canvas.height = 64;
@@ -36,6 +41,21 @@ function applyBranding({ app_name, app_icon }: AppBranding) {
     ctx.fillText(app_icon, 32, 36);
     link.type = "image/png";
     link.href = canvas.toDataURL();
+  }
+
+  // Theme palette
+  const html = document.documentElement;
+  if (theme_palette && theme_palette !== "charcoal") {
+    html.dataset.palette = theme_palette;
+  } else {
+    delete html.dataset.palette;
+  }
+
+  // Accent color
+  if (theme_accent && theme_accent !== "green") {
+    html.dataset.accent = theme_accent;
+  } else {
+    delete html.dataset.accent;
   }
 }
 
