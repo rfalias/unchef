@@ -1,29 +1,21 @@
 services:
-  backend:
-    image: ghcr.io/rfalias/unchef/backend:latest
+  unchef:
+    image: ghcr.io/rfalias/unchef:latest
+    network_mode: bridge
     volumes:
-      - db_data:/data
+      - /data/unchef:/data
     environment:
       DATABASE_URL: sqlite+aiosqlite:////data/food_app.db
       JWT_SECRET: changeme
       JWT_LIFETIME_SECONDS: 2592000
-      CORS_ORIGINS: http://localhost,http://192.168.1.100,https://chef.example.com
+      CORS_ORIGINS: https://chef.example.com
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  frontend:
-    image: ghcr.io/rfalias/unchef/frontend:latest
-    ports:
-      - "80:80"
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
-
-volumes:
-  db_data:
+    labels:
+      - traefik.enable=true
+      - traefik.http.middlewares.unchef-whitelist.ipwhitelist.sourcerange=127.0.0.1/32,192.168.0.0/16,172.0.0.0/8
+      - traefik.http.routers.unchef.rule=Host(`chef.example.com`)
+      - traefik.http.routers.unchef.entrypoints=websecure
+      - traefik.http.routers.unchef.tls.certresolver=mydnschallenge
+      - traefik.http.routers.unchef.middlewares=unchef-whitelist
+      - traefik.http.services.unchef.loadbalancer.server.port=80
+      - traefik.http.routers.unchef.service=unchef
