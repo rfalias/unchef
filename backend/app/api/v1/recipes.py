@@ -25,6 +25,7 @@ async def _apply_image_cache(recipe: Recipe, db: AsyncSession) -> None:
     if cached:
         recipe.image_url = cached
         await db.commit()
+        await db.refresh(recipe)
 
 
 @router.get("", response_model=RecipeListResponse)
