@@ -32,6 +32,7 @@ class WalmartImportRequest(BaseModel):
     walmart_store_id: int
 
 
+
 class AisleSuggestion(BaseModel):
     name: str
     keywords: list[str]

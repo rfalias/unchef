@@ -120,7 +120,20 @@ function SortableAisleRow({ aisle, storeId, storeName, onDelete }: { aisle: Aisl
           />
           {suggestions !== null && suggestions.length > 0 && (
             <div>
-              <p className="text-xs text-green-500 mb-1.5">✨ AI suggestions — click to add:</p>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-green-500">✨ AI suggestions — click to add:</p>
+                <button
+                  onClick={() => {
+                    const next = [...keywords, ...suggestions];
+                    setKeywords(next);
+                    setSuggestions([]);
+                    updateMut.mutate({ aisleId: aisle.id, body: { keywords: next } });
+                  }}
+                  className="text-xs px-2 py-0.5 rounded border border-green-800 text-green-400 hover:bg-green-900/40 transition-colors"
+                >
+                  Add all
+                </button>
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {suggestions.map(kw => (
                   <button key={kw} onClick={() => addSuggestion(kw)}
