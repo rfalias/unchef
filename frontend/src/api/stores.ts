@@ -61,7 +61,7 @@ export interface AisleSuggestion {
 
 export const parseAislesAI = async (
   storeId: number,
-  body: { text?: string; image_b64?: string; image_media_type?: string }
+  body: { text?: string; image_b64?: string; image_media_type?: string; hint?: string }
 ): Promise<AisleSuggestion[]> => {
   const { data } = await client.post(`/stores/${storeId}/aisles/parse-ai`, body);
   return data;

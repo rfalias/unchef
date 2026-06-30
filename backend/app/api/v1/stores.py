@@ -25,6 +25,7 @@ class AisleImportRequest(BaseModel):
     text: str | None = None
     image_b64: str | None = None
     image_media_type: str | None = None
+    hint: str | None = None
 
 
 class AisleSuggestion(BaseModel):
@@ -200,6 +201,7 @@ async def parse_aisles_ai(
         text=body.text,
         image_b64=body.image_b64,
         image_media_type=body.image_media_type,
+        hint=body.hint,
     )
     return [AisleSuggestion(name=a.get("name", ""), keywords=a.get("keywords", [])) for a in aisles]
 

@@ -45,6 +45,7 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("text");
   const [text, setText] = useState("");
+  const [hint, setHint] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<AisleSuggestion[] | null>(null);
@@ -52,15 +53,17 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
 
   const parseMut = useMutation({
     mutationFn: async () => {
+      const h = hint.trim() || undefined;
       if (tab === "text") {
         if (!text.trim()) throw new Error("Enter some aisle information.");
-        return parseAislesAI(storeId, { text: text.trim() });
+        return parseAislesAI(storeId, { text: text.trim(), hint: h });
       } else {
         if (!imageFile) throw new Error("Select an image.");
         const b64 = await fileToBase64(imageFile);
         return parseAislesAI(storeId, {
           image_b64: b64,
           image_media_type: "image/jpeg", // canvas always re-encodes to JPEG
+          hint: h,
         });
       }
     },
@@ -161,6 +164,19 @@ export default function ImportAislesModal({ storeId, onClose }: Props) {
               )}
             </div>
           )}
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Additional context <span className="text-gray-700">(optional)</span>
+            </label>
+            <textarea
+              value={hint}
+              onChange={e => setHint(e.target.value)}
+              rows={2}
+              placeholder="e.g. &quot;Each sign shows aisle number and category. Ignore the sale banners.&quot;"
+              className="w-full border border-gray-700 bg-gray-800 text-gray-100 placeholder-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+            />
+          </div>
 
           <button
             onClick={() => parseMut.mutate()}

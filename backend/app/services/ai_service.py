@@ -272,6 +272,7 @@ async def parse_aisles_from_input(
     text: str | None = None,
     image_b64: str | None = None,
     image_media_type: str | None = None,
+    hint: str | None = None,
 ) -> list[dict]:
     """Return [{name: str, keywords: [str]}] from free-form text or an image of aisle signs."""
     instruction = (
@@ -284,6 +285,8 @@ async def parse_aisles_from_input(
         " — no markdown, no explanation."
     )
 
+    hint_block = f"\n\nAdditional context from the user:\n{hint}" if hint else ""
+
     content: list[dict] = []
     if image_b64:
         content.append({
@@ -294,9 +297,9 @@ async def parse_aisles_from_input(
                 "data": image_b64,
             },
         })
-        content.append({"type": "text", "text": instruction})
+        content.append({"type": "text", "text": instruction + hint_block})
     else:
-        content.append({"type": "text", "text": f"{instruction}\n\nAisle information:\n{text}"})
+        content.append({"type": "text", "text": f"{instruction}\n\nAisle information:\n{text}{hint_block}"})
 
     def _call() -> str:
         client = anthropic.Anthropic(api_key=api_key)
