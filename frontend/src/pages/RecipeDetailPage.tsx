@@ -35,12 +35,10 @@ export default function RecipeDetailPage() {
         </div>
       )}
 
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-100 mb-2">{recipe.title}</h1>
-          {recipe.description && <p className="text-gray-400">{recipe.description}</p>}
-        </div>
-        <div className="flex gap-2 shrink-0 ml-4">
+      <div className="mb-4">
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">{recipe.title}</h1>
+        {recipe.description && <p className="text-gray-400 mb-3">{recipe.description}</p>}
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setShowListModal(true)}
             className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             🛒 Add to List
