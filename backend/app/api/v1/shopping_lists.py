@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
+from app.auth import current_admin_user
+from app.models.user import User
 from app.models.aisle import Aisle
 from app.models.ingredient_aisle_pin import IngredientAislePin
 from app.models.recipe import Recipe
@@ -237,7 +239,11 @@ async def update_shopping_list(
 
 
 @router.delete("/{list_id}", status_code=204)
-async def delete_shopping_list(list_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_shopping_list(
+    list_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(current_admin_user),
+):
     result = await db.execute(select(ShoppingList).where(ShoppingList.id == list_id))
     sl = result.scalar_one_or_none()
     if not sl:
@@ -391,7 +397,10 @@ async def patch_item(
 
 @router.delete("/{list_id}/items/{item_id}", status_code=204)
 async def delete_item(
-    list_id: int, item_id: int, db: AsyncSession = Depends(get_db)
+    list_id: int,
+    item_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(current_admin_user),
 ):
     result = await db.execute(
         select(ShoppingListItem).where(

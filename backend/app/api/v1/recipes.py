@@ -3,7 +3,9 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
+from app.auth import current_admin_user
 from app.models.recipe import Recipe
+from app.models.user import User
 from app.schemas.recipe import (
     RecipeCreate,
     RecipeImportRequest,
@@ -104,7 +106,11 @@ async def update_recipe(
 
 
 @router.delete("/{recipe_id}", status_code=204)
-async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_recipe(
+    recipe_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(current_admin_user),
+):
     result = await db.execute(select(Recipe).where(Recipe.id == recipe_id))
     recipe = result.scalar_one_or_none()
     if not recipe:

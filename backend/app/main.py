@@ -10,6 +10,7 @@ from app.database import engine
 from app.models import Base
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.api.v1.router import api_router
+from app.api.v1.auth_extra import router as auth_extra_router
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
             ("app_icon", "🥗"),
             ("theme_palette", "charcoal"),
             ("theme_accent", "green"),
+            ("allow_registration", "true"),
         ]:
             await conn.execute(
                 text("INSERT OR IGNORE INTO app_settings (key, value) VALUES (:k, :v)"),
@@ -64,11 +66,7 @@ app.include_router(
     prefix="/api/v1/auth/jwt",
     tags=["auth"],
 )
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/api/v1/auth",
-    tags=["auth"],
-)
+app.include_router(auth_extra_router, prefix="/api/v1/auth")
 app.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
     prefix="/api/v1/users",

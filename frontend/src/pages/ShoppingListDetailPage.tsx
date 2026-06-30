@@ -3,11 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useShoppingList, usePatchItem, useAddItem, useDeleteItem, useArchiveShoppingList, useUpdateShoppingList } from "../hooks/useShoppingLists";
 import { useStore } from "../hooks/useStores";
+import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 import Modal from "../components/ui/Modal";
 import type { AisleGroup, ShoppingListItem, Aisle } from "../types";
 
-function ItemRow({ item, listId, aisles }: { item: ShoppingListItem; listId: number; aisles: Aisle[] }) {
+function ItemRow({ item, listId, aisles, isAdmin }: { item: ShoppingListItem; listId: number; aisles: Aisle[]; isAdmin: boolean }) {
   const patchMut = usePatchItem(listId);
   const deleteMut = useDeleteItem(listId);
   const [showOverride, setShowOverride] = useState(false);
@@ -43,8 +44,10 @@ function ItemRow({ item, listId, aisles }: { item: ShoppingListItem; listId: num
             {item.aisle_override_id ? "📍" : "aisle"}
           </button>
         )}
-        <button onClick={() => deleteMut.mutate(item.id)}
-          className="text-xs text-gray-700 hover:text-red-400 px-1 transition-colors">✕</button>
+        {isAdmin && (
+          <button onClick={() => deleteMut.mutate(item.id)}
+            className="text-xs text-gray-700 hover:text-red-400 px-1 transition-colors">✕</button>
+        )}
       </div>
 
       {showOverride && (
@@ -82,7 +85,7 @@ function ItemRow({ item, listId, aisles }: { item: ShoppingListItem; listId: num
   );
 }
 
-function AisleGroupSection({ group, listId, aisles }: { group: AisleGroup; listId: number; aisles: Aisle[] }) {
+function AisleGroupSection({ group, listId, aisles, isAdmin }: { group: AisleGroup; listId: number; aisles: Aisle[]; isAdmin: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const checkedCount = group.items.filter(i => i.is_checked).length;
   const allDone = checkedCount === group.items.length;
@@ -99,7 +102,7 @@ function AisleGroupSection({ group, listId, aisles }: { group: AisleGroup; listI
       </button>
       {!collapsed && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl divide-y divide-gray-800">
-          {group.items.map(item => <ItemRow key={item.id} item={item} listId={listId} aisles={aisles} />)}
+          {group.items.map(item => <ItemRow key={item.id} item={item} listId={listId} aisles={aisles} isAdmin={isAdmin} />)}
         </div>
       )}
     </div>
@@ -107,6 +110,8 @@ function AisleGroupSection({ group, listId, aisles }: { group: AisleGroup; listI
 }
 
 export default function ShoppingListDetailPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { id } = useParams<{ id: string }>();
   const listId = Number(id);
   const navigate = useNavigate();
@@ -201,7 +206,7 @@ export default function ShoppingListDetailPage() {
       </div>
 
       {list.aisle_groups.map((group) => (
-        <AisleGroupSection key={group.aisle?.id ?? "null"} group={group} listId={listId} aisles={allAisles} />
+        <AisleGroupSection key={group.aisle?.id ?? "null"} group={group} listId={listId} aisles={allAisles} isAdmin={isAdmin} />
       ))}
 
       <div className="mt-4">

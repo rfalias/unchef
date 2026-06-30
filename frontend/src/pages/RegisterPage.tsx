@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { register, login } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 export default function RegisterPage() {
   const { setToken } = useAuth();
@@ -11,17 +12,18 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [regOpen, setRegOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    axios.get("/api/v1/auth/registration-open")
+      .then(r => setRegOpen(r.data.open))
+      .catch(() => setRegOpen(true)); // fail open
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) {
-      toast.error("Passwords don't match.");
-      return;
-    }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
+    if (password !== confirm) { toast.error("Passwords don't match."); return; }
+    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
     setLoading(true);
     try {
       await register(username, password);
@@ -51,48 +53,55 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Username</label>
-              <input
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="username"
-                className={inputCls}
-              />
+          {regOpen === false ? (
+            <div className="text-center py-4">
+              <p className="text-gray-400 text-sm mb-1">Registration is currently disabled.</p>
+              <p className="text-gray-600 text-xs">Contact an administrator to create an account.</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Confirm Password</label>
-              <input
-                type="password"
-                required
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="••••••••"
-                className={inputCls}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-500 disabled:bg-green-900 disabled:text-green-700 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2"
-            >
-              {loading ? "Creating account…" : "Create Account"}
-            </button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Username</label>
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="username"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  className={inputCls}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading || regOpen === null}
+                className="w-full bg-green-600 hover:bg-green-500 disabled:bg-green-900 disabled:text-green-700 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2"
+              >
+                {loading ? "Creating account…" : "Create Account"}
+              </button>
+            </form>
+          )}
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Already have an account?{" "}

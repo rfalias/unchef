@@ -154,7 +154,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string }) => {
+  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string; allow_registration?: boolean }) => {
     setThemeSaving(true);
     try {
       await saveBranding(patch);
@@ -213,6 +213,33 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
+
+      {/* Registration — admin only */}
+      {user?.role === "admin" && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-100 mb-1">User Registration</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            When disabled, only admins can create new accounts via the User Management page.
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => handleThemeSave({ allow_registration: !branding.allow_registration })}
+              className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${
+                branding.allow_registration ? "bg-green-600" : "bg-gray-700"
+              }`}
+            >
+              <span
+                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  branding.allow_registration ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </div>
+            <span className="text-sm text-gray-300">
+              {branding.allow_registration ? "Public registration enabled" : "Public registration disabled"}
+            </span>
+          </label>
+        </div>
+      )}
 
       {/* Theme — admin only */}
       {user?.role === "admin" && (

@@ -12,6 +12,7 @@ const DEFAULTS: AppBranding = {
   app_icon: "🥗",
   theme_palette: "charcoal",
   theme_accent: "green",
+  allow_registration: true,
 };
 
 function applyBranding({ app_name, app_icon, theme_palette, theme_accent }: AppBranding) {

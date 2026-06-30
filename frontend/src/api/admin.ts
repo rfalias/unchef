@@ -28,6 +28,15 @@ export const adminResetPassword = async (id: number, newPassword: string): Promi
   await client.post(`/admin/users/${id}/reset-password`, { new_password: newPassword });
 };
 
+export const adminCreateUser = async (
+  username: string,
+  password: string,
+  role: "user" | "admin"
+): Promise<AdminUser> => {
+  const { data } = await client.post("/admin/users", { username, password, role });
+  return data;
+};
+
 export interface ParseInspectResult {
   url: string;
   fetch: {

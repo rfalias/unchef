@@ -14,6 +14,7 @@ DEFAULTS = {
     "app_icon": "🥗",
     "theme_palette": "charcoal",
     "theme_accent": "green",
+    "allow_registration": "true",
 }
 
 VALID_PALETTES = {"charcoal", "midnight", "mocha"}
@@ -25,13 +26,16 @@ class BrandingUpdate(BaseModel):
     app_icon: str | None = None
     theme_palette: str | None = None
     theme_accent: str | None = None
+    allow_registration: bool | None = None
 
 
 @router.get("")
 async def get_settings(db: AsyncSession = Depends(get_db)):
     rows = await db.execute(text("SELECT key, value FROM app_settings"))
     data = {r[0]: r[1] for r in rows}
-    return {k: data.get(k, v) for k, v in DEFAULTS.items()}
+    result = {k: data.get(k, v) for k, v in DEFAULTS.items()}
+    result["allow_registration"] = result["allow_registration"] == "true"
+    return result
 
 
 @router.put("")
@@ -41,6 +45,8 @@ async def update_settings(
     _: User = Depends(current_admin_user),
 ):
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if "allow_registration" in updates:
+        updates["allow_registration"] = "true" if updates["allow_registration"] else "false"
     if "app_icon" in updates and len(updates["app_icon"]) > 100_000:
         raise HTTPException(status_code=422, detail="Icon image too large (max ~64 KB).")
     if "theme_palette" in updates and updates["theme_palette"] not in VALID_PALETTES:

@@ -9,10 +9,21 @@ from recipe_scrapers import scrape_html
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fastapi_users.password import PasswordHelper
+
 from app.api.deps import get_db
 from app.auth import current_admin_user, current_active_user
 from app.models.user import User
 from app.schemas.user import AdminUserPatch, AdminUserRead, PasswordReset
+
+_LOCAL_SUFFIX = "@users.unchef"
+_pw_helper = PasswordHelper()
+
+
+class AdminUserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "user"
 
 _BROWSER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
@@ -23,6 +34,40 @@ _BROWSER_HEADERS = {
 }
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+@router.post("/users", response_model=AdminUserRead, status_code=status.HTTP_201_CREATED)
+async def admin_create_user(
+    body: AdminUserCreate,
+    _: User = Depends(current_admin_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not body.username or not body.username.strip():
+        raise HTTPException(status_code=400, detail="Username is required.")
+    if len(body.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
+    if body.role not in ("user", "admin"):
+        raise HTTPException(status_code=400, detail="Role must be 'user' or 'admin'.")
+
+    username = body.username.strip()
+    email = username if "@" in username else f"{username}{_LOCAL_SUFFIX}"
+
+    existing = await db.execute(select(User).where(User.email == email))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Username already taken.")
+
+    user = User(
+        email=email,
+        hashed_password=_pw_helper.hash(body.password),
+        role=body.role,
+        is_active=True,
+        is_superuser=False,
+        is_verified=False,
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.get("/users", response_model=list[AdminUserRead])

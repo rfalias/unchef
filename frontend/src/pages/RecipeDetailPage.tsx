@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
+import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 import AddToListModal from "../components/shopping/AddToListModal";
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: recipe, isLoading } = useRecipe(Number(id));
   const deleteMut = useDeleteRecipe();
   const [showListModal, setShowListModal] = useState(false);
@@ -46,10 +49,12 @@ export default function RecipeDetailPage() {
             className="border border-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
             Edit
           </Link>
-          <button onClick={handleDelete}
-            className="border border-red-900 text-red-400 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-900/20 transition-colors">
-            Delete
-          </button>
+          {isAdmin && (
+            <button onClick={handleDelete}
+              className="border border-red-900 text-red-400 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-900/20 transition-colors">
+              Delete
+            </button>
+          )}
         </div>
       </div>
 

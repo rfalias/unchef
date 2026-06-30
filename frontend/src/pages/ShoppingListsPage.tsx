@@ -2,12 +2,13 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useShoppingLists, useDeleteShoppingList } from "../hooks/useShoppingLists";
+import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import CreateListModal from "../components/shopping/CreateListModal";
 import type { ShoppingListSummary } from "../types";
 
-function ListCard({ list, onDelete }: { list: ShoppingListSummary; onDelete: (id: number) => void }) {
+function ListCard({ list, onDelete, isAdmin }: { list: ShoppingListSummary; onDelete: (id: number) => void; isAdmin: boolean }) {
   const pct = list.total_items > 0 ? Math.round((list.checked_items / list.total_items) * 100) : 0;
   return (
     <Link
@@ -19,10 +20,12 @@ function ListCard({ list, onDelete }: { list: ShoppingListSummary; onDelete: (id
           <span className="font-semibold text-gray-100 group-hover:text-green-400 transition-colors">{list.name}</span>
           {list.store && <p className="text-xs text-gray-500 mt-0.5">🏪 {list.store.name}</p>}
         </div>
-        <button
-          onClick={e => { e.preventDefault(); onDelete(list.id); }}
-          className="text-gray-700 hover:text-red-400 text-sm transition-colors"
-        >✕</button>
+        {isAdmin && (
+          <button
+            onClick={e => { e.preventDefault(); onDelete(list.id); }}
+            className="text-gray-700 hover:text-red-400 text-sm transition-colors"
+          >✕</button>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
@@ -35,6 +38,8 @@ function ListCard({ list, onDelete }: { list: ShoppingListSummary; onDelete: (id
 }
 
 export default function ShoppingListsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: active, isLoading } = useShoppingLists(false);
   const { data: archived } = useShoppingLists(true);
   const deleteMut = useDeleteShoppingList();
@@ -69,7 +74,7 @@ export default function ShoppingListsPage() {
         />
       ) : (
         <div className="space-y-3 mb-8">
-          {active.map(list => <ListCard key={list.id} list={list} onDelete={handleDelete} />)}
+          {active.map(list => <ListCard key={list.id} list={list} onDelete={handleDelete} isAdmin={isAdmin} />)}
         </div>
       )}
 
@@ -77,7 +82,7 @@ export default function ShoppingListsPage() {
         <div>
           <h2 className="text-lg font-semibold text-gray-600 mb-3">Archived</h2>
           <div className="space-y-3 opacity-50">
-            {archived.map(list => <ListCard key={list.id} list={list} onDelete={handleDelete} />)}
+            {archived.map(list => <ListCard key={list.id} list={list} onDelete={handleDelete} isAdmin={isAdmin} />)}
           </div>
         </div>
       )}

@@ -4,8 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
+from app.auth import current_admin_user
 from app.models.aisle import Aisle
 from app.models.store import Store
+from app.models.user import User
 from app.schemas.store import (
     AisleCreate,
     AisleRead,
@@ -78,7 +80,11 @@ async def update_store(
 
 
 @router.delete("/{store_id}", status_code=204)
-async def delete_store(store_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_store(
+    store_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(current_admin_user),
+):
     result = await db.execute(select(Store).where(Store.id == store_id))
     store = result.scalar_one_or_none()
     if not store:
@@ -164,7 +170,10 @@ async def update_aisle(
 
 @router.delete("/{store_id}/aisles/{aisle_id}", status_code=204)
 async def delete_aisle(
-    store_id: int, aisle_id: int, db: AsyncSession = Depends(get_db)
+    store_id: int,
+    aisle_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(current_admin_user),
 ):
     aisle = await _get_aisle(store_id, aisle_id, db)
     await db.delete(aisle)

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useStores, useCreateStore, useDeleteStore } from "../hooks/useStores";
+import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
 import Modal from "../components/ui/Modal";
@@ -10,6 +11,8 @@ const input = "w-full border border-gray-600 bg-gray-800 text-gray-100 placehold
 const label = "block text-sm font-medium text-gray-300 mb-1";
 
 export default function StoresPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: stores, isLoading } = useStores();
   const createMut = useCreateStore();
   const deleteMut = useDeleteStore();
@@ -67,12 +70,14 @@ export default function StoresPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-600 group-hover:text-gray-400 transition-colors">Manage Aisles →</span>
-                <button
-                  onClick={e => { e.preventDefault(); handleDelete(store.id, store.name); }}
-                  className="border border-red-900 text-red-400 px-3 py-1.5 rounded-lg text-sm hover:bg-red-900/20 transition-colors"
-                >
-                  Delete
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={e => { e.preventDefault(); handleDelete(store.id, store.name); }}
+                    className="border border-red-900 text-red-400 px-3 py-1.5 rounded-lg text-sm hover:bg-red-900/20 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </Link>
           ))}

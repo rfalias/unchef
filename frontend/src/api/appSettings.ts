@@ -5,6 +5,7 @@ export interface AppBranding {
   app_icon: string;
   theme_palette: string;
   theme_accent: string;
+  allow_registration: boolean;
 }
 
 export const getBranding = async (): Promise<AppBranding> => {

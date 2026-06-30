@@ -100,8 +100,10 @@ function SortableAisleRow({ aisle, storeId, storeName, onDelete }: { aisle: Aisl
             )}
             <button onClick={() => { setEditing(true); setExpanded(true); }}
               className="text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded hover:bg-gray-700 transition-colors">Edit</button>
-            <button onClick={() => onDelete(aisle.id)}
-              className="text-xs text-red-600 hover:text-red-400 px-2 py-1 rounded hover:bg-red-900/20 transition-colors">Delete</button>
+            {user?.role === "admin" && (
+              <button onClick={() => onDelete(aisle.id)}
+                className="text-xs text-red-600 hover:text-red-400 px-2 py-1 rounded hover:bg-red-900/20 transition-colors">Delete</button>
+            )}
           </>
         )}
       </div>

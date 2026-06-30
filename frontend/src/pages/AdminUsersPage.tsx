@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { listUsers, patchUser, deleteUser, adminResetPassword, type AdminUser } from "../api/admin";
+import { listUsers, patchUser, deleteUser, adminResetPassword, adminCreateUser, type AdminUser } from "../api/admin";
 import { usernameFromEmail } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
@@ -176,8 +176,79 @@ function UserCard({ user, isSelf, isFounder }: { user: AdminUser; isSelf: boolea
   );
 }
 
+function CreateUserForm({ onDone }: { onDone: () => void }) {
+  const qc = useQueryClient();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"user" | "admin">("user");
+
+  const createMut = useMutation({
+    mutationFn: () => adminCreateUser(username.trim(), password, role),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success(`User "${username.trim()}" created.`);
+      onDone();
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) =>
+      toast.error(e.response?.data?.detail ?? "Failed to create user."),
+  });
+
+  const fieldCls =
+    "w-full border border-gray-600 bg-gray-800 text-gray-100 placeholder-gray-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500";
+
+  return (
+    <form
+      onSubmit={e => { e.preventDefault(); createMut.mutate(); }}
+      className="bg-gray-900 border border-green-900/50 rounded-xl p-4 space-y-3"
+    >
+      <p className="text-sm font-medium text-gray-200">New User</p>
+      <input
+        type="text"
+        required
+        value={username}
+        onChange={e => setUsername(e.target.value)}
+        placeholder="Username"
+        className={fieldCls}
+      />
+      <input
+        type="password"
+        required
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder="Password (min 8 chars)"
+        className={fieldCls}
+      />
+      <select
+        value={role}
+        onChange={e => setRole(e.target.value as "user" | "admin")}
+        className={fieldCls}
+      >
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={createMut.isPending || !username.trim() || !password}
+          className="text-sm px-4 py-1.5 rounded-lg bg-green-700 hover:bg-green-600 disabled:opacity-40 text-white transition-colors"
+        >
+          {createMut.isPending ? "Creating…" : "Create"}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="text-sm px-3 py-1.5 text-gray-600 hover:text-gray-400 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function AdminUsersPage() {
   const { user: me } = useAuth();
+  const [creating, setCreating] = useState(false);
   const { data: users, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: listUsers,
@@ -185,10 +256,26 @@ export default function AdminUsersPage() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-100">User Management</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage accounts and roles</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-100">User Management</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage accounts and roles</p>
+        </div>
+        {!creating && (
+          <button
+            onClick={() => setCreating(true)}
+            className="text-sm px-3 py-1.5 rounded-lg border border-gray-700 text-gray-400 hover:border-green-700 hover:text-green-400 transition-colors"
+          >
+            + Create User
+          </button>
+        )}
       </div>
+
+      {creating && (
+        <div className="mb-4">
+          <CreateUserForm onDone={() => setCreating(false)} />
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20">
