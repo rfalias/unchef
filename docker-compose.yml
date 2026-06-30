@@ -1,0 +1,33 @@
+services:
+  backend:
+    image: ${GHCR_REPO}/backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    volumes:
+      - db_data:/data
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:////data/food_app.db
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGINS: '["http://localhost","http://localhost:${PORT:-80}"]'
+      JWT_LIFETIME_SECONDS: "2592000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    image: ${GHCR_REPO}/frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:
