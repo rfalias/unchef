@@ -11,9 +11,20 @@ from app.schemas.recipe import (
     RecipeRead,
     RecipeUpdate,
 )
+from app.services.image_cache import cache_image, delete_cached_image
 from app.services.recipe_importer import import_recipe_from_url
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
+
+
+async def _apply_image_cache(recipe: Recipe, db: AsyncSession) -> None:
+    """If image_url is a remote URL, download it and update the record in-place."""
+    if not recipe.image_url or not recipe.image_url.startswith("http"):
+        return
+    cached = await cache_image(recipe.id, recipe.image_url)
+    if cached:
+        recipe.image_url = cached
+        await db.commit()
 
 
 @router.get("", response_model=RecipeListResponse)
@@ -59,6 +70,7 @@ async def create_recipe(body: RecipeCreate, db: AsyncSession = Depends(get_db)):
     db.add(recipe)
     await db.commit()
     await db.refresh(recipe)
+    await _apply_image_cache(recipe, db)
     return recipe
 
 
@@ -86,6 +98,7 @@ async def update_recipe(
         recipe.ingredients = [i.model_dump() for i in body.ingredients]
     await db.commit()
     await db.refresh(recipe)
+    await _apply_image_cache(recipe, db)
     return recipe
 
 
@@ -95,5 +108,6 @@ async def delete_recipe(recipe_id: int, db: AsyncSession = Depends(get_db)):
     recipe = result.scalar_one_or_none()
     if not recipe:
         raise HTTPException(status_code=404, detail="Recipe not found")
+    delete_cached_image(recipe.id)
     await db.delete(recipe)
     await db.commit()
