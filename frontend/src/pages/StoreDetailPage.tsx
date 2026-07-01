@@ -4,7 +4,8 @@ import toast from "react-hot-toast";
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -169,7 +170,10 @@ export default function StoreDetailPage() {
   const [draftStoreDesc, setDraftStoreDesc] = useState("");
   const [showImport, setShowImport] = useState(false);
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+  );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
