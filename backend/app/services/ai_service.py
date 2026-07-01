@@ -174,8 +174,8 @@ Return this exact structure (null for unknown fields):
   "prep_time_minutes": 15,
   "cook_time_minutes": 30,
   "ingredients": [
-    {{"name": "all-purpose flour", "amount": "2", "unit": "cups", "notes": "sifted"}},
-    {{"name": "salt", "amount": "1", "unit": "tsp", "notes": null}}
+    {{"name": "all-purpose flour", "amount": "2", "unit": "cups", "notes": "sifted", "section": "For the dough"}},
+    {{"name": "salt", "amount": "1", "unit": "tsp", "notes": null, "section": null}}
   ],
   "instructions": ["Step one.", "Step two."],
   "tags": ["dinner"],
@@ -187,6 +187,7 @@ Rules:
 - amount: numeric string only ("1", "1/2", "2 1/4")
 - unit: measurement word or null
 - notes: preparation descriptors or null
+- section: ingredient group heading (e.g. "For the sauce", "Brine", "To serve") or null if no sections
 - Return ONLY the JSON, no markdown"""
 
     raw = await _call_claude(api_key, prompt)
@@ -208,8 +209,8 @@ Return this exact structure (null for unknown fields):
   "prep_time_minutes": 15,
   "cook_time_minutes": 30,
   "ingredients": [
-    {{"name": "all-purpose flour", "amount": "2", "unit": "cups", "notes": "sifted"}},
-    {{"name": "salt", "amount": "1", "unit": "tsp", "notes": null}}
+    {{"name": "all-purpose flour", "amount": "2", "unit": "cups", "notes": "sifted", "section": "For the dough"}},
+    {{"name": "salt", "amount": "1", "unit": "tsp", "notes": null, "section": null}}
   ],
   "instructions": ["Step one.", "Step two."],
   "tags": ["dinner"],
@@ -221,6 +222,7 @@ Rules:
 - amount: numeric string only ("1", "1/2", "2 1/4")
 - unit: measurement word or null
 - notes: preparation descriptors or null
+- section: ingredient group heading (e.g. "For the sauce", "Brine", "To serve") or null if no sections
 - Return ONLY the JSON, no markdown"""
 
 
