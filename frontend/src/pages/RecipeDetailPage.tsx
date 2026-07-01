@@ -5,6 +5,8 @@ import { useRecipe, useDeleteRecipe } from "../hooks/useRecipes";
 import { useAuth } from "../auth/AuthContext";
 import Spinner from "../components/ui/Spinner";
 import AddToListModal from "../components/shopping/AddToListModal";
+import { useMetricUnits } from "../hooks/useMetricUnits";
+import { convertToMetric } from "../utils/unitConversion";
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +16,7 @@ export default function RecipeDetailPage() {
   const { data: recipe, isLoading } = useRecipe(Number(id));
   const deleteMut = useDeleteRecipe();
   const [showListModal, setShowListModal] = useState(false);
+  const { metric } = useMetricUnits();
 
   const handleDelete = async () => {
     if (!confirm("Delete this recipe?")) return;
@@ -101,7 +104,10 @@ export default function RecipeDetailPage() {
                   )}
                   <li key={i} className="flex gap-2 text-sm text-gray-300 py-1.5 border-b border-gray-800 last:border-0">
                     <span className="text-gray-600 shrink-0">
-                      {[ing.amount, ing.unit].filter(Boolean).join(" ")}
+                      {(() => {
+                        const { amount, unit } = metric ? convertToMetric(ing.amount, ing.unit) : { amount: ing.amount, unit: ing.unit };
+                        return [amount, unit].filter(Boolean).join(" ");
+                      })()}
                     </span>
                     <span className="font-medium">{ing.name}</span>
                     {ing.notes && <span className="text-gray-600 italic">({ing.notes})</span>}

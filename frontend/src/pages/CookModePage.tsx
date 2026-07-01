@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRecipe } from "../hooks/useRecipes";
 import Spinner from "../components/ui/Spinner";
+import { useMetricUnits } from "../hooks/useMetricUnits";
+import { convertToMetric } from "../utils/unitConversion";
 
 type Tab = "ingredients" | "steps";
 
@@ -18,6 +20,7 @@ export default function CookModePage() {
   const [tab, setTab] = useState<Tab>("ingredients");
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [checkedSteps, setCheckedSteps] = useState<Set<number>>(new Set());
+  const { metric } = useMetricUnits();
 
   // Screen wake lock — keep mobile screen on while cooking
   useEffect(() => {
@@ -139,9 +142,13 @@ export default function CookModePage() {
                     </span>
                     <span className={`flex-1 min-w-0 ${checked ? "line-through" : ""}`}>
                       <span className="block text-base text-gray-100 font-medium leading-snug">
-                        {[ing.amount, ing.unit].filter(Boolean).join(" ")
-                          ? <><span className="text-gray-400 font-normal">{[ing.amount, ing.unit].filter(Boolean).join(" ")} </span>{ing.name}</>
-                          : ing.name}
+                        {(() => {
+                          const { amount, unit } = metric ? convertToMetric(ing.amount, ing.unit) : { amount: ing.amount, unit: ing.unit };
+                          const amtStr = [amount, unit].filter(Boolean).join(" ");
+                          return amtStr
+                            ? <><span className="text-gray-400 font-normal">{amtStr} </span>{ing.name}</>
+                            : ing.name;
+                        })()}
                       </span>
                       {ing.notes && (
                         <span className="block text-sm text-gray-500 italic mt-0.5">{ing.notes}</span>

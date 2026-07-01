@@ -35,10 +35,12 @@ import { changePassword } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 import { useBranding } from "../contexts/BrandingContext";
 import { usernameFromEmail } from "../api/auth";
+import { useMetricUnits } from "../hooks/useMetricUnits";
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const { branding, saveBranding } = useBranding();
+  const { metric, toggle: toggleMetric } = useMetricUnits();
 
   // API key
   const [key, setKey] = useState("");
@@ -212,6 +214,32 @@ export default function SettingsPage() {
             {pwSaving ? "Saving…" : "Change Password"}
           </button>
         </form>
+      </div>
+
+      {/* Measurement units — all users */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+        <h2 className="font-semibold text-gray-100 mb-1">Measurement Units</h2>
+        <p className="text-xs text-gray-500 mb-4">Choose how ingredient amounts are displayed in recipes.</p>
+        <div className="flex gap-2">
+          {[
+            { id: false, label: "Imperial", sample: "2 cups · 1 oz" },
+            { id: true,  label: "Metric",   sample: "480 ml · 28 g" },
+          ].map(opt => (
+            <button
+              key={String(opt.id)}
+              type="button"
+              onClick={() => { if (metric !== opt.id) toggleMetric(); }}
+              className={`flex-1 rounded-xl border-2 px-3 py-3 text-center transition-all ${
+                metric === opt.id
+                  ? "border-green-500 ring-1 ring-green-500/30"
+                  : "border-gray-700 hover:border-gray-500"
+              }`}
+            >
+              <p className="text-sm font-medium text-gray-300 mb-1">{opt.sample}</p>
+              <p className="text-xs text-gray-500">{opt.label}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Registration — admin only */}
