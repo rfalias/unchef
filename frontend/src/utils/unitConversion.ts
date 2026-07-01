@@ -15,17 +15,10 @@ function formatAmount(n: number): string {
   return Math.round(n).toString();
 }
 
+// Only weight units and explicitly-liquid fl oz are converted.
+// tsp/tbsp/cup are left alone — they're used for dry ingredients too and
+// "360 ml flour" is more confusing than "1.5 cups flour".
 const CONVERSIONS: Record<string, { factor: number; toUnit: string }> = {
-  tsp:            { factor: 5,   toUnit: "ml" },
-  teaspoon:       { factor: 5,   toUnit: "ml" },
-  teaspoons:      { factor: 5,   toUnit: "ml" },
-  tbsp:           { factor: 15,  toUnit: "ml" },
-  tbs:            { factor: 15,  toUnit: "ml" },
-  tablespoon:     { factor: 15,  toUnit: "ml" },
-  tablespoons:    { factor: 15,  toUnit: "ml" },
-  cup:            { factor: 240, toUnit: "ml" },
-  cups:           { factor: 240, toUnit: "ml" },
-  c:              { factor: 240, toUnit: "ml" },
   "fl oz":        { factor: 30,  toUnit: "ml" },
   "fluid ounce":  { factor: 30,  toUnit: "ml" },
   "fluid ounces": { factor: 30,  toUnit: "ml" },
