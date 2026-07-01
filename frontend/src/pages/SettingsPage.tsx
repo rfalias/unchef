@@ -154,7 +154,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string; allow_registration?: boolean }) => {
+  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string; theme_muted?: string; allow_registration?: boolean }) => {
     setThemeSaving(true);
     try {
       await saveBranding(patch);
@@ -277,7 +277,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Accent */}
-          <div>
+          <div className="mb-5">
             <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">Accent Color</p>
             <div className="flex flex-wrap gap-2">
               {ACCENTS.map(a => (
@@ -299,6 +299,38 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-600 mt-2">
               Current: <span className="text-gray-400 capitalize">{branding.theme_accent}</span>
             </p>
+          </div>
+
+          {/* Muted text */}
+          <div>
+            <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Secondary Text Brightness</p>
+            <p className="text-xs text-gray-600 mb-3">Affects amounts, notes, timestamps, and other supporting text.</p>
+            <div className="flex gap-2">
+              {[
+                { id: "default", label: "Default", sample: "2 cups" },
+                { id: "medium",  label: "Medium",  sample: "2 cups" },
+                { id: "bright",  label: "Bright",  sample: "2 cups" },
+              ].map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={themeSaving}
+                  onClick={() => handleThemeSave({ theme_muted: m.id })}
+                  className={`flex-1 rounded-xl border-2 px-3 py-3 text-center transition-all ${
+                    branding.theme_muted === m.id
+                      ? "border-green-500 ring-1 ring-green-500/30"
+                      : "border-gray-700 hover:border-gray-500"
+                  }`}
+                >
+                  <p className={`text-sm font-medium mb-1 ${
+                    m.id === "default" ? "text-gray-600" :
+                    m.id === "medium"  ? "text-gray-400" :
+                                         "text-gray-200"
+                  }`}>{m.sample}</p>
+                  <p className="text-xs text-gray-400">{m.label}</p>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

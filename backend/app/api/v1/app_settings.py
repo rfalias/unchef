@@ -14,11 +14,13 @@ DEFAULTS = {
     "app_icon": "🥗",
     "theme_palette": "charcoal",
     "theme_accent": "green",
+    "theme_muted": "default",
     "allow_registration": "true",
 }
 
 VALID_PALETTES = {"charcoal", "midnight", "mocha"}
 VALID_ACCENTS = {"green", "blue", "purple", "amber", "rose", "cyan"}
+VALID_MUTED = {"default", "medium", "bright"}
 
 
 class BrandingUpdate(BaseModel):
@@ -26,6 +28,7 @@ class BrandingUpdate(BaseModel):
     app_icon: str | None = None
     theme_palette: str | None = None
     theme_accent: str | None = None
+    theme_muted: str | None = None
     allow_registration: bool | None = None
 
 
@@ -53,6 +56,8 @@ async def update_settings(
         raise HTTPException(status_code=422, detail=f"Invalid palette. Choose from: {', '.join(VALID_PALETTES)}")
     if "theme_accent" in updates and updates["theme_accent"] not in VALID_ACCENTS:
         raise HTTPException(status_code=422, detail=f"Invalid accent. Choose from: {', '.join(VALID_ACCENTS)}")
+    if "theme_muted" in updates and updates["theme_muted"] not in VALID_MUTED:
+        raise HTTPException(status_code=422, detail=f"Invalid muted level. Choose from: {', '.join(VALID_MUTED)}")
     for key, value in updates.items():
         await db.execute(
             text("INSERT INTO app_settings (key, value) VALUES (:k, :v) ON CONFLICT(key) DO UPDATE SET value = :v"),

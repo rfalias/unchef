@@ -12,10 +12,11 @@ const DEFAULTS: AppBranding = {
   app_icon: "🥗",
   theme_palette: "charcoal",
   theme_accent: "green",
+  theme_muted: "default",
   allow_registration: true,
 };
 
-function applyBranding({ app_name, app_icon, theme_palette, theme_accent }: AppBranding) {
+function applyBranding({ app_name, app_icon, theme_palette, theme_accent, theme_muted }: AppBranding) {
   document.title = app_name;
 
   // Favicon
@@ -57,6 +58,13 @@ function applyBranding({ app_name, app_icon, theme_palette, theme_accent }: AppB
     html.dataset.accent = theme_accent;
   } else {
     delete html.dataset.accent;
+  }
+
+  // Muted text brightness
+  if (theme_muted && theme_muted !== "default") {
+    html.dataset.muted = theme_muted;
+  } else {
+    delete html.dataset.muted;
   }
 }
 

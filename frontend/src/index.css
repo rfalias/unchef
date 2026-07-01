@@ -115,3 +115,17 @@ body {
   --color-green-200: #a5f3fc;
   --color-green-100: #cffafe;
 }
+
+/* ── Muted text brightness ──
+   Placed last so these override any palette-specific gray values.
+   gray-500 and gray-600 are the main "secondary text" shades used for
+   amounts, notes, timestamps, and other supporting text. */
+[data-muted="medium"] {
+  --color-gray-600: #6b7280;
+  --color-gray-500: #9ca3af;
+}
+
+[data-muted="bright"] {
+  --color-gray-600: #9ca3af;
+  --color-gray-500: #d1d5db;
+}

@@ -35,6 +35,7 @@ async def lifespan(app: FastAPI):
             ("app_icon", "🥗"),
             ("theme_palette", "charcoal"),
             ("theme_accent", "green"),
+            ("theme_muted", "default"),
             ("allow_registration", "true"),
         ]:
             await conn.execute(
