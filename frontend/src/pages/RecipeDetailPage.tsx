@@ -56,17 +56,20 @@ export default function RecipeDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-4 text-sm text-gray-500 mb-6">
+      <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-2">
         {recipe.servings && <span>👤 {recipe.servings} servings</span>}
         {recipe.prep_time_minutes && <span>⏱ Prep: {recipe.prep_time_minutes}m</span>}
         {recipe.cook_time_minutes && <span>🔥 Cook: {recipe.cook_time_minutes}m</span>}
         {totalTime > 0 && <span>⏳ Total: {totalTime}m</span>}
-        {recipe.source_url && (
-          <a href={recipe.source_url} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-400">
-            Source ↗
-          </a>
-        )}
       </div>
+      {recipe.source_url && (
+        <div className="mb-6">
+          <a href={recipe.source_url} target="_blank" rel="noreferrer"
+            className="text-sm text-green-500 hover:text-green-400 break-all">
+            {recipe.source_url} ↗
+          </a>
+        </div>
+      )}
 
       {recipe.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-6">

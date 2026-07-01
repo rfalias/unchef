@@ -83,7 +83,8 @@ async def parse_recipe(
 ):
     api_key = _require_key(current_user)
     try:
-        return await ai_service.parse_recipe_from_url(body.url, api_key)
+        result, _ = await ai_service.parse_recipe_via_claude(body.url, api_key)
+        return result
     except Exception as exc:
         _handle_ai_error(exc)
 
