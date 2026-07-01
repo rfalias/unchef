@@ -37,6 +37,9 @@ FRACTION_MAP = {
 }
 
 _FRACTION_UNICODE_RE = re.compile("|".join(re.escape(k) for k in FRACTION_MAP))
+
+_UNITS_PATTERN = "|".join(re.escape(u) for u in sorted(UNITS, key=len, reverse=True))
+
 _AMOUNT_RE = re.compile(
     r"^"
     r"(?P<amount>"
@@ -44,15 +47,25 @@ _AMOUNT_RE = re.compile(
     r"(?:\d+/\d+|\d+\.?\d*)" # fraction or decimal
     r")"
     r"\s*"
-    r"(?:(?P<unit>" + "|".join(re.escape(u) for u in sorted(UNITS, key=len, reverse=True)) + r")(?=[\s.,/]|$))?"
+    r"(?:(?P<unit>" + _UNITS_PATTERN + r")(?=[\s.,/]|$))?"
     r"\.?\s*"
     r"(?P<rest>.*)$",
     re.IGNORECASE,
 )
 
+# Matches a compound secondary amount like "+ 3/4 teaspoon" or "+ 2 tablespoons"
+_COMPOUND_RE = re.compile(
+    r"^\+\s*(?:\d+\s+)?(?:\d+/\d+|\d+\.?\d*)\s+(?:" + _UNITS_PATTERN + r")\s*",
+    re.IGNORECASE,
+)
+
 
 def _normalize_unicode_fractions(text: str) -> str:
-    return _FRACTION_UNICODE_RE.sub(lambda m: FRACTION_MAP[m.group()], text)
+    def replace(m: re.Match) -> str:
+        # Insert a space when a digit immediately precedes the fraction (e.g. 1½ → 1 1/2)
+        prefix = " " if m.start() > 0 and text[m.start() - 1].isdigit() else ""
+        return prefix + FRACTION_MAP[m.group()]
+    return _FRACTION_UNICODE_RE.sub(replace, text)
 
 
 def parse_ingredient(raw: str) -> dict:
@@ -63,24 +76,29 @@ def parse_ingredient(raw: str) -> dict:
 
     raw = _normalize_unicode_fractions(raw)
 
-    # Extract notes in parentheses
-    notes_match = re.search(r"\(([^)]+)\)", raw)
-    notes = notes_match.group(1).strip() if notes_match else None
-    if notes_match:
-        raw = raw[:notes_match.start()] + raw[notes_match.end():]
-        raw = raw.strip().rstrip(",").strip()
+    # Collect ALL parenthetical groups as notes, then remove them from raw
+    notes_parts = re.findall(r"\(([^)]*)\)", raw)
+    notes = "; ".join(p.strip() for p in notes_parts if p.strip()) or None
+    raw = re.sub(r"\s*\([^)]*\)\s*", " ", raw).strip().rstrip(",").strip()
+    # Strip any residual unmatched closing parens left by nested groups
+    raw = raw.replace(")", "").strip().rstrip(",").strip()
 
     m = _AMOUNT_RE.match(raw)
     if m:
         amount = m.group("amount").strip() or None
         unit = (m.group("unit") or "").strip().lower() or None
         name = m.group("rest").strip().rstrip(",").strip()
+
+        # Strip compound secondary amounts like "+ 3/4 teaspoon" from the start of name
+        comp = _COMPOUND_RE.match(name)
+        if comp:
+            name = name[comp.end():].strip().rstrip(",").strip()
     else:
         amount = None
         unit = None
         name = raw.strip().rstrip(",").strip()
 
-    # Normalize unit
+    # Normalize unit aliases
     unit_aliases = {
         "c": "cup", "tbs": "tbsp", "tsp": "tsp",
         "oz": "oz", "lb": "lb", "lbs": "lb",
