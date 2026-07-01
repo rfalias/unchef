@@ -43,6 +43,10 @@ export default function RecipeDetailPage() {
             className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             🛒 Add to List
           </button>
+          <Link to={`/recipes/${id}/cook`}
+            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            👨‍🍳 Cook
+          </Link>
           <Link to={`/recipes/${id}/edit`}
             className="border border-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
             Edit
