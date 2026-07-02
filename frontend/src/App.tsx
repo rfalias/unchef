@@ -10,6 +10,7 @@ import RecipesPage from "./pages/RecipesPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
 import RecipeImportPage from "./pages/RecipeImportPage";
 import RecipeEditPage from "./pages/RecipeEditPage";
+import RecipeNewPage from "./pages/RecipeNewPage";
 import CookModePage from "./pages/CookModePage";
 import StoresPage from "./pages/StoresPage";
 import StoreDetailPage from "./pages/StoreDetailPage";
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/recipes" replace /> },
       { path: "recipes", element: <RecipesPage /> },
       { path: "recipes/import", element: <RecipeImportPage /> },
+      { path: "recipes/new", element: <RecipeNewPage /> },
       { path: "recipes/:id", element: <RecipeDetailPage /> },
       { path: "recipes/:id/edit", element: <RecipeEditPage /> },
       { path: "recipes/:id/cook", element: <CookModePage /> },

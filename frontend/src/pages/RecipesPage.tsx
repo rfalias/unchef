@@ -20,12 +20,20 @@ export default function RecipesPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-100">Recipes</h1>
-        <Link
-          to="/recipes/import"
-          className="bg-gray-800 border border-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 hover:text-gray-100 transition-colors"
-        >
-          🔗 Import URL
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            to="/recipes/new"
+            className="bg-gray-800 border border-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 hover:text-gray-100 transition-colors"
+          >
+            ✏️ Add Recipe
+          </Link>
+          <Link
+            to="/recipes/import"
+            className="bg-gray-800 border border-gray-700 text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 hover:text-gray-100 transition-colors"
+          >
+            🔗 Import URL
+          </Link>
+        </div>
       </div>
 
       <div className="relative mb-6">
@@ -55,12 +63,20 @@ export default function RecipesPage() {
           body={debounced ? "Try a different search term." : "Import from a URL or create one manually."}
           action={
             !debounced && (
-              <Link
-                to="/recipes/import"
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
-              >
-                Import a Recipe
-              </Link>
+              <div className="flex gap-2 justify-center">
+                <Link
+                  to="/recipes/new"
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  ✏️ Add Manually
+                </Link>
+                <Link
+                  to="/recipes/import"
+                  className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                >
+                  🔗 Import URL
+                </Link>
+              </div>
             )
           }
         />
