@@ -7,6 +7,7 @@ export interface AppBranding {
   theme_accent: string;
   theme_muted: string;
   allow_registration: boolean;
+  public_recipes: boolean;
 }
 
 export const getBranding = async (): Promise<AppBranding> => {

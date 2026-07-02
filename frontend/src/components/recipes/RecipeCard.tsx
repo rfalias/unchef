@@ -7,10 +7,10 @@ function timeLabel(mins: number | null) {
   return `${Math.floor(mins / 60)}h ${mins % 60 ? `${mins % 60}m` : ""}`.trim();
 }
 
-export default function RecipeCard({ recipe }: { recipe: Recipe }) {
+export default function RecipeCard({ recipe, basePath = "/recipes" }: { recipe: Recipe; basePath?: string }) {
   const totalTime = (recipe.prep_time_minutes ?? 0) + (recipe.cook_time_minutes ?? 0);
   return (
-    <Link to={`/recipes/${recipe.id}`} className="block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 hover:shadow-lg hover:shadow-black/30 transition-all">
+    <Link to={`${basePath}/${recipe.id}`} className="block bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 hover:shadow-lg hover:shadow-black/30 transition-all">
       <div className="h-40 bg-gray-700 overflow-hidden">
         {recipe.image_url ? (
           <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" />

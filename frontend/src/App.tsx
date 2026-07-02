@@ -19,6 +19,9 @@ import ShoppingListDetailPage from "./pages/ShoppingListDetailPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminDebugPage from "./pages/AdminDebugPage";
 import SettingsPage from "./pages/SettingsPage";
+import PublicLayout from "./pages/PublicLayout";
+import PublicRecipesPage from "./pages/PublicRecipesPage";
+import PublicRecipeDetailPage from "./pages/PublicRecipeDetailPage";
 import Spinner from "./components/ui/Spinner";
 
 const queryClient = new QueryClient({
@@ -55,6 +58,14 @@ function AdminRoute({ element }: { element: React.ReactNode }) {
 const router = createBrowserRouter([
   { path: "/login", element: <PublicRoute element={<LoginPage />} /> },
   { path: "/register", element: <PublicRoute element={<RegisterPage />} /> },
+  {
+    path: "/public",
+    element: <PublicLayout />,
+    children: [
+      { index: true, element: <PublicRecipesPage /> },
+      { path: ":id", element: <PublicRecipeDetailPage /> },
+    ],
+  },
   {
     path: "/",
     element: <ProtectedLayout />,

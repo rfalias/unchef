@@ -16,6 +16,7 @@ DEFAULTS = {
     "theme_accent": "green",
     "theme_muted": "default",
     "allow_registration": "true",
+    "public_recipes": "false",
 }
 
 VALID_PALETTES = {"charcoal", "midnight", "mocha"}
@@ -30,6 +31,7 @@ class BrandingUpdate(BaseModel):
     theme_accent: str | None = None
     theme_muted: str | None = None
     allow_registration: bool | None = None
+    public_recipes: bool | None = None
 
 
 @router.get("")
@@ -38,6 +40,7 @@ async def get_settings(db: AsyncSession = Depends(get_db)):
     data = {r[0]: r[1] for r in rows}
     result = {k: data.get(k, v) for k, v in DEFAULTS.items()}
     result["allow_registration"] = result["allow_registration"] == "true"
+    result["public_recipes"] = result.get("public_recipes", "false") == "true"
     return result
 
 
@@ -50,6 +53,8 @@ async def update_settings(
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if "allow_registration" in updates:
         updates["allow_registration"] = "true" if updates["allow_registration"] else "false"
+    if "public_recipes" in updates:
+        updates["public_recipes"] = "true" if updates["public_recipes"] else "false"
     if "app_icon" in updates and len(updates["app_icon"]) > 100_000:
         raise HTTPException(status_code=422, detail="Icon image too large (max ~64 KB).")
     if "theme_palette" in updates and updates["theme_palette"] not in VALID_PALETTES:

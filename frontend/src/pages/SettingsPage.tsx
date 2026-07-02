@@ -269,6 +269,33 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* Public recipe browsing — admin only */}
+      {user?.role === "admin" && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-100 mb-1">Public Recipe Browsing</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            When enabled, recipes can be viewed at <span className="font-mono text-gray-400">/public</span> without logging in. No editing, no shopping lists — read-only.
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => handleThemeSave({ public_recipes: !branding.public_recipes })}
+              className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${
+                branding.public_recipes ? "bg-green-600" : "bg-gray-700"
+              }`}
+            >
+              <span
+                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  branding.public_recipes ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </div>
+            <span className="text-sm text-gray-300">
+              {branding.public_recipes ? "Public browsing enabled" : "Public browsing disabled"}
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* Theme — admin only */}
       {user?.role === "admin" && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">

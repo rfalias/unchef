@@ -11,6 +11,7 @@ from app.models import Base
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.api.v1.router import api_router
 from app.api.v1.auth_extra import router as auth_extra_router
+from app.api.v1.public import router as public_router
 
 
 @asynccontextmanager
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI):
             ("theme_accent", "green"),
             ("theme_muted", "default"),
             ("allow_registration", "true"),
+            ("public_recipes", "false"),
         ]:
             await conn.execute(
                 text("INSERT OR IGNORE INTO app_settings (key, value) VALUES (:k, :v)"),
@@ -73,6 +75,9 @@ app.include_router(
     prefix="/api/v1/users",
     tags=["users"],
 )
+
+# Public API routes (no auth required)
+app.include_router(public_router, prefix="/api/v1")
 
 # Protected API routes
 app.include_router(

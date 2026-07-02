@@ -14,6 +14,7 @@ const DEFAULTS: AppBranding = {
   theme_accent: "green",
   theme_muted: "default",
   allow_registration: true,
+  public_recipes: false,
 };
 
 function applyBranding({ app_name, app_icon, theme_palette, theme_accent, theme_muted }: AppBranding) {
