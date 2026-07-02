@@ -156,7 +156,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string; theme_muted?: string; allow_registration?: boolean }) => {
+  const handleThemeSave = async (patch: { theme_palette?: string; theme_accent?: string; theme_muted?: string; allow_registration?: boolean; public_recipes?: boolean }) => {
     setThemeSaving(true);
     try {
       await saveBranding(patch);
